@@ -112,6 +112,8 @@ export interface PatientRegistrationPayload {
 
 }
 
+export type OptionalPatientRegistrationPayload = Partial<PatientRegistrationPayload>;
+
 export const defaultPatientRegistrationPayload: PatientRegistrationPayload = {
   identifierType: null,
   identifierNumber: "",

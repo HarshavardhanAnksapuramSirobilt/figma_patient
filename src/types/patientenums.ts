@@ -70,6 +70,7 @@ export enum RelationType {
   Child = "Child",
   Sibling = "Sibling",
   Guardian = "Guardian",
+  Friend = "Friend",
   Other = "Other",
 }
 
