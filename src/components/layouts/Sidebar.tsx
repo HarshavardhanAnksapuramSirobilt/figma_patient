@@ -11,7 +11,7 @@ export const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
 
   const navItems = [
     { to: "/", label: "Dashboard", icon: <Home /> },
-    { to: "/patients", label: "Patients", icon: <Users /> },
+    { to: "/list", label: "Patients", icon: <Users /> },
     { to: "/appointments", label: "Appointments", icon: <Calendar /> },
     { to: "/doctors", label: "Doctors", icon: <Stethoscope /> },
   ];

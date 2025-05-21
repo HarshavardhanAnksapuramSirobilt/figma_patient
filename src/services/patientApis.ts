@@ -48,14 +48,6 @@ export const getAllPatients = async () => {
   }
 };
 
-export const deletePatient = async (id: string) => {
-  try {
-    await axios.delete(`${BASE_URL}/${id}`);
-    return { success: true };
-  } catch (error: any) {
-    return { success: false, error: error.response?.data || error.message };
-  }
-};
 
 
 export const searchPatients = async (filters: Record<string, string>) => {
@@ -83,7 +75,7 @@ export const searchPatients = async (filters: Record<string, string>) => {
 
 export const deletePatientById = async (id: string) => {
   try {
-    await axios.delete(`${BASE_URL}/api/patients/${id}`);
+    await axios.delete(`${BASE_URL}/patients/${id}`);
     return true;
   } catch (err) {
     console.error("Delete failed:", err);

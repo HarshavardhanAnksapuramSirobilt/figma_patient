@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import Homepage from "../pages/Homepage";
 import {Layout } from '../components/layouts/Layout';
 import PatientPage from "../pages/PatientPage";
+import PatientListPage from "../pages/PatientListPage";
 
 export const AppRoutes = () => (
   <Routes>
@@ -9,6 +10,7 @@ export const AppRoutes = () => (
       <Route index element={<Homepage />} />
       <Route path="patients" element={<PatientPage />} />
       <Route path="/patients/:id" element={<PatientPage />} />
+      <Route path="list" element={<PatientListPage />} />
     </Route>
     
   </Routes>

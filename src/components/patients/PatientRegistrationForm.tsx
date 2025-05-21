@@ -113,11 +113,12 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
         fetchPatient();
     }, [patientId]);
 
+    const isEditMode = Boolean(patientId);
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
             <div className="text-center">
-                <h2 className="text-2xl font-semibold">Patient Registration</h2>
+                <h2 className="text-2xl font-semibold">{isEditMode ? "Edit Patient" : "Patient Registration"}</h2>
             </div>
             <h2 className="text-xl font-semibold">Basic Info</h2>
 
