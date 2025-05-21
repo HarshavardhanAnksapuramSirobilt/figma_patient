@@ -24,7 +24,7 @@ export const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
     >
       {/* Close button on small screens */}
       <div className="md:hidden flex justify-end p-2">
-        <X className="w-5 h-5 cursor-pointer" onClick={() => setIsOpen(false)} />
+        <X className="mt-10 w-5 h-5 cursor-pointer" onClick={() => setIsOpen(false)} />
       </div>
 
       <ul className="menu space-y-1 p-2 text-base-content">
