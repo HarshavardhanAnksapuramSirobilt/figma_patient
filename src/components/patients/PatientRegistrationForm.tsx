@@ -8,6 +8,9 @@ import {
 } from "../../hooks/useFormHandlers";
 import { defaultPatientRegistrationPayload } from "../../types/patient";
 import type { PatientRegistrationPayload } from "../../types/patient";
+import { patientSchema } from "../../zod_validations/patient/patientSchema";
+import { ZodError } from "zod";
+import FormMessage from "../../commonfields/FormMessage";
 import {
     titleOptions,
     genderOptions,
@@ -49,41 +52,67 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
     const onTokenChange = (index: number) => handleArrayChange(setForm, "tokens", index);
     const onObjectChange = (key: keyof PatientRegistrationPayload) => handleObjectChange(setForm, key);
     const navigate=useNavigate();
-    // const handleSubmit = (e: React.FormEvent) => {
+    const[formErrors,setFormErrors]=useState<Record<string,string>>({});    // const handleSubmit = (e: React.FormEvent) => {
+   
+    // const handleSubmit = async (e: React.FormEvent) => {
     //     e.preventDefault();
     //     console.log("Full Patient Form:", form);
-    // };
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        console.log("Full Patient Form:", form);
-        const fullName = `${form.firstName} ${form.middleName || ""} ${form.lastName}`.trim();
+    //     const fullName = `${form.firstName} ${form.middleName || ""} ${form.lastName}`.trim();
 
-        if (patientId) {
-            // 🟡 EDIT FLOW
-            const { success, data, error } = await updatePatient(patientId, form);
+    //     if (patientId) {
+    //         // 🟡 EDIT FLOW
+    //         const { success, data, error } = await updatePatient(patientId, form);
             
-            if (success) {
+    //         if (success) {
         
 
                 
-                showSuccess("Patient updated successfully",fullName);
-                navigate("/list");
+    //             showSuccess("Patient updated successfully",fullName);
+    //             navigate("/list");
 
-            } else {
-                console.error("Error updating patient:", error);
-            }
-        } else {
-            // 🟢 CREATE FLOW
-            const { success, data, error } = await createPatient(form);
-            if (success) {
-                console.log("Patient created successfully:", data);
-                showSuccess("Patient Created Successfully",fullName);
-            } else {
-                console.error("Error creating patient:", error);
-            }
-        }
-    };
+    //         } else {
+    //             console.error("Error updating patient:", error);
+    //         }
+    //     } else {
+    //         // 🟢 CREATE FLOW
+    //         const { success, data, error } = await createPatient(form);
+    //         if (success) {
+    //             console.log("Patient created successfully:", data);
+    //             showSuccess("Patient Created Successfully",fullName);
+    //         } else {
+    //             console.error("Error creating patient:", error);
+    //         }
+    //     }
+    // };
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
 
+      try {
+          patientSchema.parse(form); // Zod validation
+          setFormErrors({}); // Clear previous errors
+
+          const fullName = `${form.firstName} ${form.middleName || ""} ${form.lastName}.trim()`;
+
+          if (patientId) {
+              const { success, data, error } = await updatePatient(patientId, form);
+              if (success) showSuccess("Patient updated successfully", fullName);
+          } else {
+              const { success, data, error } = await createPatient(form);
+              if (success) showSuccess("Patient Created Successfully", fullName);
+          }
+      } catch (error: any) {
+          if (error instanceof ZodError) {
+              const fieldErrors: Record<string, string> = {};
+              error.errors.forEach((e) => {
+                  const path = e.path.join(".");
+                  fieldErrors[path] = e.message;
+              });
+              setFormErrors(fieldErrors);
+          } else {
+              console.error("Unexpected error:", error);
+          }
+      }
+  };
 
     useEffect(() => {
         if (form.dateOfBirth) {
@@ -141,26 +170,32 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
         <option value="">Select</option>
         {titleOptions.map(t => <option key={t} value={t}>{t}</option>)}
       </Select>
+      <FormMessage>{formErrors["title"]}</FormMessage>
     </FormField>
 
     <FormField label="First Name" required>
       <Input className="text-sm py-1 px-2" name="firstName" value={form.firstName || ""} onChange={onChange} />
+      <FormMessage>{formErrors["firstName"]}</FormMessage>
     </FormField>
 
     <FormField label="Middle Name">
       <Input className="text-sm py-1 px-2" name="middleName" value={form.middleName || ""} onChange={onChange} />
+      <FormMessage>{formErrors["middleName"]}</FormMessage>
     </FormField>
 
     <FormField label="Last Name" required>
       <Input className="text-sm py-1 px-2" name="lastName" value={form.lastName || ""} onChange={onChange} />
+      <FormMessage>{formErrors["lastName"]}</FormMessage>
     </FormField>
 
     <FormField label="Date of Birth" required>
       <Calendar className="text-sm py-1 px-2" name="dateOfBirth" value={form.dateOfBirth || ""} onChange={onChange} />
+      <FormMessage>{formErrors["dateOfBirth"]}</FormMessage>
     </FormField>
 
     <FormField label="Age">
       <Input className="text-sm py-1 px-2" name="age" value={form.age ?? ""} readOnly />
+    
     </FormField>
 
     <FormField label="Gender" required>
@@ -168,6 +203,7 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
         <option value="">Select</option>
         {genderOptions.map(g => <option key={g} value={g}>{g}</option>)}
       </Select>
+      <FormMessage>{formErrors["gender"]}</FormMessage> 
     </FormField>
 
     <FormField label="Blood Group">
@@ -190,11 +226,14 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
         {identifierTypeOptions.map((type) => (
           <option key={type} value={type}>{type}</option>
         ))}
+     
       </Select>
+      <FormMessage>{formErrors["identifierType"]}</FormMessage>
     </FormField>
 
     <FormField label="Identifier Number" required>
       <Input className="text-sm py-1 px-2" name="identifierNumber" value={form.identifierNumber || ""} onChange={onChange} />
+      <FormMessage>{formErrors["identifierNumber"]}</FormMessage>
     </FormField>
   </div>
 </div>
@@ -215,14 +254,17 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
   </div>
   {form.contacts?.map((contact, index) => (
     <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-3 p-3 mb-2 bg-white  rounded-md">
-      <FormField label="Primary Phone Number" required>
+      <FormField label="Primary Phone Number" required={index===0}>
         <Input className="text-sm py-1 px-2" name="phoneNumber" value={contact.phoneNumber || ""} onChange={onContactChange(index)} />
+        
+        {index===0&&(<FormMessage>{formErrors["contacts.0.phoneNumber"]}</FormMessage>)}
       </FormField>
       <FormField label="Secondary Mobile Number">
         <Input className="text-sm py-1 px-2" name="mobileNumber" value={contact.mobileNumber || ""} onChange={onContactChange(index)} />
       </FormField>
       <FormField label="Email">
         <Input className="text-sm py-1 px-2" name="email" value={contact.email || ""} onChange={onContactChange(index)} />
+        <FormMessage>{formErrors[`contacts.${index}.email`]}</FormMessage>
       </FormField>
       <FormField label="Preferred Contact Mode">
         <Select className="text-sm py-1 px-2" name="preferredContactMode" value={contact.preferredContactMode || ""} onChange={onContactChange(index)}>
