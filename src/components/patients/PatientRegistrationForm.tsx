@@ -26,6 +26,7 @@ import { Select } from "../../commonfields/Select";
 import { Calendar } from "../../commonfields/Calendar";
 import { Button } from "../../commonfields/Button";
 import { createPatient, getPatientById,updatePatient } from "../../services/patientApis";
+import { showSuccess } from "../../utils/toastUtils";
 
 type Props = {
     patientId?: string;
@@ -53,12 +54,17 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         console.log("Full Patient Form:", form);
+        const fullName = `${form.firstName} ${form.middleName || ""} ${form.lastName}`.trim();
 
         if (patientId) {
             // 🟡 EDIT FLOW
             const { success, data, error } = await updatePatient(patientId, form);
+            
             if (success) {
                 console.log("Patient updated successfully:", data);
+                
+                showSuccess("Patient updated successfully",fullName);
+
             } else {
                 console.error("Error updating patient:", error);
             }
@@ -67,6 +73,7 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
             const { success, data, error } = await createPatient(form);
             if (success) {
                 console.log("Patient created successfully:", data);
+                showSuccess("Patient Created Successfully",fullName);
             } else {
                 console.error("Error creating patient:", error);
             }
