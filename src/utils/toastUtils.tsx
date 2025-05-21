@@ -1,5 +1,4 @@
-// src/utils/toastUtils.tsx
-import React from "react";
+
 import { toast } from "react-toastify";
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 
@@ -13,7 +12,7 @@ export const showSuccess = (message: string, fullName: string): void => {
             <FaCheckCircle style={{ color: 'green', marginTop: '4px' }} />
             <div>
                 <strong>{message}</strong><br />
-                Patient <span style={{ fontWeight: 600 }}>{fullName}</span> registered.
+                PateintName: <span style={{ fontWeight: 600 }}>{fullName}</span>
             </div>
         </div>,
         {

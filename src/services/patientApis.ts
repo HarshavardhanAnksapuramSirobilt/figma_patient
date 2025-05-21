@@ -48,6 +48,14 @@ export const getAllPatients = async () => {
   }
 };
 
+export const deletePatient = async (id: string) => {
+  try {
+    await axios.delete(`${BASE_URL}/${id}`);
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.response?.data || error.message };
+  }
+};
 
 
 export const searchPatients = async (filters: Record<string, string>) => {

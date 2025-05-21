@@ -20,7 +20,7 @@ export const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
     <aside
       className={`${
         isOpen ? "translate-x-0" : "-translate-x-full"
-      } md:translate-x-0 fixed md:static top-0 left-0 h-[calc(100vh-4rem)] bg-base-200 w-16 md:w-16 hover:w-48 transition-all duration-200 z-40 overflow-hidden group`}
+      } md:translate-x-0 sticky md:sticky top-16 left-0 h-[calc(100vh-4rem)] bg-base-200 w-16 md:w-16 hover:w-48 transition-all duration-200 z-40 overflow-hidden group`}
     >
       {/* Close button on small screens */}
       <div className="md:hidden flex justify-end p-2">

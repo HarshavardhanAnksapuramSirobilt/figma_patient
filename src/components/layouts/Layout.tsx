@@ -44,7 +44,7 @@ export const Layout = () => {
   const [isRegisterDrawerOpen, setRegisterDrawerOpen] = useState(false); // ✅ new state
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col border border-black">
       {/* Navbar */}
       <header className="w-full fixed top-0 z-50">
         <Navbar

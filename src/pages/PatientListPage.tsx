@@ -3,7 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { searchPatients, deletePatientById, getPatientById } from "../services/patientApis";
 import { FaEdit, FaTrashAlt, FaEye } from "react-icons/fa";
 import PatientViewModal from "../components/patients/PatientViewModal";
+import { showError, showSuccess } from "../utils/toastUtils";
+import ConfirmDialog from "../utils/ConfirmDialog";
 
+import { FaSearch } from "react-icons/fa";
 // Debounce utility
 const debounce = (func: (...args: any[]) => void, delay: number) => {
     let timeoutId: ReturnType<typeof setTimeout>;
@@ -12,6 +15,8 @@ const debounce = (func: (...args: any[]) => void, delay: number) => {
         timeoutId = setTimeout(() => func(...args), delay);
     };
 };
+const fields = ["firstName", "lastName", "email", "mobile", "city"];
+
 
 const PatientListPage = () => {
     const [patients, setPatients] = useState([]);
@@ -25,6 +30,10 @@ const PatientListPage = () => {
         mobile: "",
         city: "",
     });
+
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+    const [fullName, setFullName] = useState("");
 
     const navigate = useNavigate();
 
@@ -40,21 +49,37 @@ const PatientListPage = () => {
         debouncedSearch(updated);
     };
 
-    const handleDelete = async (id: string) => {
-        const confirm = window.confirm("Are you sure you want to delete this patient?");
-        if (confirm) {
-            const success = await deletePatientById(id);
-            if (success) {
-                alert("Deleted successfully");
-                searchPatients(filters).then(setPatients);
-            } else {
-                alert("Failed to delete");
-            }
-        }
+    const handleDeleteClick = (id: string) => {
+        const fetchPatient = patients.find(x => x.patientId === id);
+        if (!fetchPatient) return;
+
+        const name = `${fetchPatient.firstName} ${fetchPatient.middleName ? fetchPatient.middleName + ' ' : ''}${fetchPatient.lastName}`;
+        setFullName(name);
+        setPendingDeleteId(id);
+        setIsConfirmOpen(true);
     };
+
+    const confirmDelete = async () => {
+        if (!pendingDeleteId) return;
+
+        const success = await deletePatientById(pendingDeleteId);
+        if (success) {
+            console.log("Patient Deleted Successfully");
+            searchPatients(filters).then(setPatients);
+            showSuccess("Patient Deleted Successfully", fullName);
+        } else {
+            showError("Failed To Delete Pateint",fullName);
+
+        }
+
+        setIsConfirmOpen(false);
+        setPendingDeleteId(null);
+    };
+
     const handleView = async (id: string) => {
         try {
             const result = await getPatientById(id);
+            console.log("result",result)
             if (Array.isArray(result) && result.length > 0) {
                 setSelectedPatient(result[0]);
                 setShowViewModal(true);
@@ -72,32 +97,38 @@ const PatientListPage = () => {
     }, []);
 
     return (
-        <div className="flex flex-col gap-6 w-full p-6">
-            <div className="flex justify-end">
+        <div className="flex flex-col gap-1 w-full p-3  ">
+            <div className="flex justify-end ">
                 <button
-                    className="btn btn-sm bg-primary text-black hover:bg-primary/90 shadow-md px-4 py-1.5 rounded-md"
+                    className="btn btn-sm bg-primary text-white  hover:bg-primary/90 shadow-md px-4 py-1.5 rounded-md"
                     onClick={() => navigate("/patients")}
                 >
-                    Register Patient
+                   +Register Patient
                 </button>
             </div>
+{/* Search Filter Layout */}
+<div className="bg-white p-4 border border-gray-200 rounded-md shadow-sm space-y-2">
+  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 w-full text-sm">
+    {fields.map((key) => (
+      <div key={key} className="relative w-full">
+        <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+          <FaSearch className="text-gray-400 w-4 h-4" />
+        </div>
+        <input
+          name={key}
+          value={filters[key as keyof typeof filters]}
+          onChange={handleInputChange}
+          placeholder={key
+            .replace(/([A-Z])/g, " $1")
+            .replace(/^./, (str) => str.toUpperCase())}
+          className="pl-8 pr-2 py-2 border border-gray-300 rounded text-xs w-full focus:outline-none focus:ring-1 focus:ring-primary"
+        />
+      </div>
+    ))}
+  </div>
+</div>
 
-            {/* Search Filter Layout */}
-            <div className="bg-white p-4 border border-gray-200 rounded-md shadow-sm space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 w-full text-sm">
-                    {["firstName", "lastName", "email", "mobile", "city"].map((key) => (
-                        <input
-                            key={key}
-                            name={key}
-                            value={filters[key as keyof typeof filters]}
-                            onChange={handleInputChange}
-                            placeholder={key.replace(/([A-Z])/g, " $1").replace(/^./, str => str.toUpperCase())}
-                            className="input input-bordered input-sm w-full text-sm"
-                        />
-                    ))}
-                </div>
-            </div>
-
+      
             {/* Patient Table */}
             <div className="overflow-x-auto shadow rounded-lg border border-gray-200">
                 <table className="table table-sm table-zebra w-full min-w-[800px] text-sm">
@@ -122,12 +153,12 @@ const PatientListPage = () => {
                         ) : (
                             patients.map((p: any) => (
                                 <tr key={p.patientId} className="hover:bg-gray-50">
-                                    <td className="font-medium text-gray-800">{p.firstName} {p.lastName}</td>
-                                    <td>{p.phone || "—"}</td>
-                                    <td>{p.email || "—"}</td>
-                                    <td>{p.identifierNumber || "—"}</td>
-                                    <td>{p.age ?? "—"}</td>
-                                    <td>{p.gender ?? "—"}</td>
+                                    <td className="font-medium text-gray-800">{p.firstName+""} {p.middleName+" "}{p.lastName+" "}</td>
+                                    <td>{p.phone || "N/A"}</td>
+                                    <td>{p.email || "N/A"}</td>
+                                    <td>{p.identifierNumber || "N/A"}</td>
+                                    <td>{p.age ?? "N/A"}</td>
+                                    <td>{p.gender ?? "N/A"}</td>
                                     <td className="text-right space-x-2">
                                         <button
                                             className="btn btn-sm btn-outline btn-circle"
@@ -146,7 +177,7 @@ const PatientListPage = () => {
                                         </button>
                                         <button
                                             className="btn btn-sm btn-outline btn-error btn-circle"
-                                            onClick={() => handleDelete(p.patientId)}
+                                            onClick={() => handleDeleteClick(p.patientId)}
                                             title="Delete"
                                         >
                                             <FaTrashAlt />
@@ -166,8 +197,14 @@ const PatientListPage = () => {
                 />
             )}
 
+            {/* Confirmation Dialog */}
+            <ConfirmDialog
+                isOpen={isConfirmOpen}
+                message={`Are you sure you want to delete ${fullName}?`}
+                onConfirm={confirmDelete}
+                onCancel={() => setIsConfirmOpen(false)}
+            />
         </div>
-
     );
 };
 
