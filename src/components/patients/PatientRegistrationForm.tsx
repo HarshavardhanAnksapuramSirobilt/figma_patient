@@ -25,12 +25,17 @@ import { Input } from "../../commonfields/Input";
 import { Select } from "../../commonfields/Select";
 import { Calendar } from "../../commonfields/Calendar";
 import { Button } from "../../commonfields/Button";
-import { createPatient } from "../../services/patientApis";
+import { createPatient, getPatientById,updatePatient } from "../../services/patientApis";
 
-export const PatientRegistrationForm = () => {
+type Props = {
+    patientId?: string;
+};
+
+export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
     const [form, setForm] = useState<PatientRegistrationPayload>(
         defaultPatientRegistrationPayload
     );
+    const [loading, setLoading] = useState(false);
 
     const onChange = handleChange(setForm);
     const onContactChange = (index: number) => handleArrayChange(setForm, "contacts", index);
@@ -48,13 +53,26 @@ export const PatientRegistrationForm = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         console.log("Full Patient Form:", form);
-        const { success, data, error } = await createPatient(form);
-        if (success) {
-            console.log("Patient created successfully:", data);
+
+        if (patientId) {
+            // 🟡 EDIT FLOW
+            const { success, data, error } = await updatePatient(patientId, form);
+            if (success) {
+                console.log("Patient updated successfully:", data);
+            } else {
+                console.error("Error updating patient:", error);
+            }
         } else {
-            console.error("Error creating patient:", error);
+            // 🟢 CREATE FLOW
+            const { success, data, error } = await createPatient(form);
+            if (success) {
+                console.log("Patient created successfully:", data);
+            } else {
+                console.error("Error creating patient:", error);
+            }
         }
     };
+
 
     useEffect(() => {
         if (form.dateOfBirth) {
@@ -73,6 +91,27 @@ export const PatientRegistrationForm = () => {
         }
     }, [form.dateOfBirth]);
 
+    useEffect(() => {
+        const fetchPatient = async () => {
+            if (!patientId) return;
+
+            try {
+                setLoading(true);
+                const result = await getPatientById(patientId);
+                if (Array.isArray(result) && result.length > 0) {
+                    setForm(result[0]); // Take first object in array
+                } else {
+                    console.warn("No patient found for ID:", patientId);
+                }
+            } catch (error) {
+                console.error("Error loading patient:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchPatient();
+    }, [patientId]);
 
 
     return (
