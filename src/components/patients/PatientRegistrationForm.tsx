@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     handleChange,
     handleObjectChange,
@@ -56,10 +56,31 @@ export const PatientRegistrationForm = () => {
         }
     };
 
+    useEffect(() => {
+        if (form.dateOfBirth) {
+            const birthDate = new Date(form.dateOfBirth);
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+
+            setForm(prev => ({
+                ...prev,
+                age
+            }));
+        }
+    }, [form.dateOfBirth]);
+
+
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
-            <h2 className="text-xl font-semibold">Patient Registration</h2>
+            <div className="text-center">
+                <h2 className="text-2xl font-semibold">Patient Registration</h2>
+            </div>
+            <h2 className="text-xl font-semibold">Basic Info</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <FormField label="Title" required>
@@ -84,6 +105,15 @@ export const PatientRegistrationForm = () => {
                 <FormField label="Date of Birth" required>
                     <Calendar name="dateOfBirth" value={form.dateOfBirth || ""} onChange={onChange} />
                 </FormField>
+
+                <FormField label="Age">
+                    <Input
+                        name="age"
+                        value={form.age ?? ""}
+                        readOnly
+                    />
+                </FormField>
+
 
                 <FormField label="Gender" required>
                     <Select name="gender" value={form.gender || ""} onChange={onChange}>
@@ -240,7 +270,7 @@ export const PatientRegistrationForm = () => {
                         <div className="w-1/4 flex justify-end mt-4">
                             <Button
                                 type="button"
-                                className="btn btn-sm btn-outline text-red-600 border-red-500 hover:bg-red-50 inline-block w-auto"
+                                className="btn btn-sm btn-outline text-red-600 border-red-500 hover:bg-red-50 w-auto"
                                 onClick={() => removeArrayItem(setForm, "addresses", index)}
                             >
                                 Remove
@@ -430,7 +460,7 @@ export const PatientRegistrationForm = () => {
 
 
             {/* Relationships */}
-            <div>
+            {/* <div>
                 <div className="flex justify-between items-center mb-2">
                     <h3 className="text-lg font-semibold">Relationships</h3>
                     <div className="col-span-1 text-right">
@@ -469,7 +499,7 @@ export const PatientRegistrationForm = () => {
                         </div>
                     </div>
                 ))}
-            </div>
+            </div> */}
 
             {/* insurance */}
             <div>
