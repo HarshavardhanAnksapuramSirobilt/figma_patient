@@ -1,3 +1,8 @@
+// ✅ RegisterPatientDrawer.tsx - NO changes needed
+// Still emits `onSuccess()` when registration is complete (already correct)
+
+// ✅ PatientListPage.tsx - adjust to listen for "refresh trigger" from localStorage
+
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -9,9 +14,8 @@ import { FaEdit, FaTrashAlt, FaEye, FaSearch } from "react-icons/fa";
 import PatientViewModal from "../components/patients/PatientViewModal";
 import { showError, showSuccess } from "../utils/toastUtils";
 import ConfirmDialog from "../utils/ConfirmDialog";
-import { RegisterPatientDrawer } from "../components/patients/RegisterPatientDrawer"; // ✅ Make sure this path is correct
+import { RegisterPatientDrawer } from "../components/patients/RegisterPatientDrawer";
 
-// Debounce utility
 const debounce = (func: (...args: any[]) => void, delay: number) => {
   let timeoutId: ReturnType<typeof setTimeout>;
   return (...args: any[]) => {
@@ -27,7 +31,6 @@ const PatientListPage = () => {
   const [patients, setPatients] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [showViewModal, setShowViewModal] = useState(false);
-  const [showRegisterDrawer, setShowRegisterDrawer] = useState(false);
 
   const [filters, setFilters] = useState({
     firstName: "",
@@ -50,7 +53,7 @@ const PatientListPage = () => {
   ).current;
 
   const handleRefresh = () => {
-    setRefreshTrigger((prev) => prev + 1); // This triggers useEffect
+    setRefreshTrigger((prev) => prev + 1);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,7 +79,6 @@ const PatientListPage = () => {
 
     const success = await deletePatientById(pendingDeleteId);
     if (success) {
-      console.log("Patient Deleted Successfully");
       searchPatients(filters).then(setPatients);
       showSuccess("Patient Deleted Successfully", fullName);
     } else {
@@ -97,13 +99,26 @@ const PatientListPage = () => {
         alert("Patient not found.");
       }
     } catch (error) {
-      console.log(error);
       alert("Error fetching patient details.");
     }
   };
 
   useEffect(() => {
-    searchPatients(filters).then(setPatients); // initial load
+    const handleRefreshEvent = () => handleRefresh();
+  
+    // ✅ Listen to the global event
+    window.addEventListener("patient:registered", handleRefreshEvent);
+  
+    // Cleanup on unmount
+    return () => {
+      window.removeEventListener("patient:registered", handleRefreshEvent);
+    };
+  }, []);
+  
+
+  // 🔄 Actual fetch call (triggered by search or refresh)
+  useEffect(() => {
+    searchPatients(filters).then(setPatients);
   }, [refreshTrigger]);
 
   return (
@@ -111,13 +126,13 @@ const PatientListPage = () => {
       <div className="flex justify-end">
         <button
           className="btn btn-sm bg-primary text-white hover:bg-primary/90 shadow-md px-4 py-1.5 rounded-md"
-          onClick={() => setShowRegisterDrawer(true)}
+          onClick={() => navigate("/patients")}
         >
           +Register Patient
         </button>
       </div>
 
-      {/* Search Filter Layout */}
+      {/* Search Filters */}
       <div className="bg-white p-4 border border-gray-200 rounded-md shadow-sm space-y-2">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 w-full text-sm">
           {fields.map((key) => (
@@ -129,9 +144,7 @@ const PatientListPage = () => {
                 name={key}
                 value={filters[key as keyof typeof filters]}
                 onChange={handleInputChange}
-                placeholder={key
-                  .replace(/([A-Z])/g, " $1")
-                  .replace(/^./, (str) => str.toUpperCase())}
+                placeholder={key.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())}
                 className="pl-8 pr-2 py-2 border border-gray-300 rounded text-xs w-full focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
@@ -139,7 +152,7 @@ const PatientListPage = () => {
         </div>
       </div>
 
-      {/* Patient Table */}
+      {/* Table */}
       <div className="overflow-x-auto shadow rounded-lg border border-gray-200 mt-2">
         <table className="table table-sm table-zebra w-full min-w-[800px] text-sm">
           <thead className="bg-gray-100 text-gray-800 font-semibold">
@@ -208,23 +221,17 @@ const PatientListPage = () => {
         />
       )}
 
-      {/* Confirmation Dialog */}
       <ConfirmDialog
         isOpen={isConfirmOpen}
         message={`Are you sure you want to delete ${fullName}?`}
         onConfirm={confirmDelete}
         onCancel={() => setIsConfirmOpen(false)}
       />
-
-      {/* Quick Register Drawer */}
-      {showRegisterDrawer && (
-        <RegisterPatientDrawer
-          onClose={() => setShowRegisterDrawer(false)}
-          onSuccess={handleRefresh}
-        />
-      )}
     </div>
   );
 };
 
 export default PatientListPage;
+
+// ✅ In RegisterPatientDrawer.tsx, add after success:
+// localStorage.setItem("refreshPatientList", "true");

@@ -1,3 +1,4 @@
+// RegisterPatientDrawer.tsx
 import React, { useState } from "react";
 import { handleChange, handleArrayChange } from "../../hooks/useFormHandlers";
 import { defaultPatientRegistrationPayload } from "../../types/patient";
@@ -13,11 +14,7 @@ import {
   relationTypeOptions,
   identifierTypeOptions,
 } from "../../types/patientenums";
-import { Link } from "react-router-dom";
 import { createPatient } from "../../services/patientApis";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-
 import { showError, showSuccess } from "../../utils/toastUtils";
 
 type Props = {
@@ -26,9 +23,7 @@ type Props = {
 };
 
 export const RegisterPatientDrawer: React.FC<Props> = ({ onClose, onSuccess }) => {
-  const [form, setForm] = useState<PatientRegistrationPayload>(
-    defaultPatientRegistrationPayload
-  );
+  const [form, setForm] = useState<PatientRegistrationPayload>(defaultPatientRegistrationPayload);
 
   const onBasicChange = handleChange(setForm);
   const onContactChange = handleArrayChange(setForm, "contacts", 0);
@@ -36,16 +31,15 @@ export const RegisterPatientDrawer: React.FC<Props> = ({ onClose, onSuccess }) =
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const fullName = `${form.firstName} ${form.middleName || ""} ${
-      form.lastName
-    }`.trim();
-    console.log("Full Patient Form:", form);
+    const fullName = `${form.firstName} ${form.middleName || ""} ${form.lastName}`.trim();
+
     const { success, data, error } = await createPatient(form);
     if (success) {
-      console.log("Patient created successfully:", data);
       showSuccess("Quick Registration Successful", fullName);
-      if (onSuccess) onSuccess(); // Refresh the list
-      onClose(); // Close drawer
+      window.dispatchEvent(new Event("patient:registered"));
+
+  if (onSuccess) onSuccess();
+        onClose();
     } else {
       showError("Error Creating Patient", fullName);
       console.error("Error creating patient:", error);
@@ -61,16 +55,9 @@ export const RegisterPatientDrawer: React.FC<Props> = ({ onClose, onSuccess }) =
         </button>
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="grid grid-cols-1 md:grid-cols-2 gap-4"
-      >
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField label="Title" required>
-          <Select
-            name="title"
-            value={form.title || ""}
-            onChange={onBasicChange}
-          >
+          <Select name="title" value={form.title || ""} onChange={onBasicChange}>
             <option value="">Select</option>
             {titleOptions.map((t) => (
               <option key={t} value={t}>
@@ -81,43 +68,23 @@ export const RegisterPatientDrawer: React.FC<Props> = ({ onClose, onSuccess }) =
         </FormField>
 
         <FormField label="First Name" required>
-          <Input
-            name="firstName"
-            value={form.firstName || ""}
-            onChange={onBasicChange}
-          />
+          <Input name="firstName" value={form.firstName || ""} onChange={onBasicChange} />
         </FormField>
 
         <FormField label="Middle Name">
-          <Input
-            name="middleName"
-            value={form.middleName || ""}
-            onChange={onBasicChange}
-          />
+          <Input name="middleName" value={form.middleName || ""} onChange={onBasicChange} />
         </FormField>
 
         <FormField label="Last Name" required>
-          <Input
-            name="lastName"
-            value={form.lastName || ""}
-            onChange={onBasicChange}
-          />
+          <Input name="lastName" value={form.lastName || ""} onChange={onBasicChange} />
         </FormField>
 
         <FormField label="Date of Birth" required>
-          <Calendar
-            name="dateOfBirth"
-            value={form.dateOfBirth || ""}
-            onChange={onBasicChange}
-          />
+          <Calendar name="dateOfBirth" value={form.dateOfBirth || ""} onChange={onBasicChange} />
         </FormField>
 
         <FormField label="Gender" required>
-          <Select
-            name="gender"
-            value={form.gender || ""}
-            onChange={onBasicChange}
-          >
+          <Select name="gender" value={form.gender || ""} onChange={onBasicChange}>
             <option value="">Select</option>
             {genderOptions.map((g) => (
               <option key={g} value={g}>
@@ -167,11 +134,7 @@ export const RegisterPatientDrawer: React.FC<Props> = ({ onClose, onSuccess }) =
         </FormField>
 
         <FormField label="Identifier Type" required>
-          <Select
-            name="identifierType"
-            value={form.identifierType || ""}
-            onChange={onBasicChange}
-          >
+          <Select name="identifierType" value={form.identifierType || ""} onChange={onBasicChange}>
             <option value="">Select</option>
             {identifierTypeOptions.map((type) => (
               <option key={type} value={type}>
@@ -189,16 +152,6 @@ export const RegisterPatientDrawer: React.FC<Props> = ({ onClose, onSuccess }) =
             placeholder="Enter identifier value"
           />
         </FormField>
-
-        <div className="col-span-2 mt-2">
-          <Link
-            to="/patients"
-            className="text-sm text-blue-600 hover:underline"
-            onClick={onClose}
-          >
-            + Add more details
-          </Link>
-        </div>
 
         <div className="flex gap-4 mt-6 col-span-2">
           <Button type="submit" variant="primary">
