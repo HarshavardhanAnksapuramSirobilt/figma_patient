@@ -8,6 +8,7 @@ import { Input } from "../../../src/commonfields/Input";
 import { Select } from "../../../src/commonfields/Select";
 import { Calendar } from "../../../src/commonfields/Calendar";
 import { Button } from "../../../src/commonfields/Button";
+import { Link } from "react-router-dom";
 import {
   titleOptions,
   genderOptions,
@@ -153,7 +154,18 @@ export const RegisterPatientDrawer: React.FC<Props> = ({ onClose, onSuccess }) =
           />
         </FormField>
 
-        <div className="flex gap-4 mt-6 col-span-2">
+        <div className="col-span-2 mt-2">
+          <Link
+            to="/patients"
+            className="text-sm text-blue-600 hover:underline"
+            onClick={onClose}
+          >
+            + Add more details
+          </Link>
+        </div>
+
+        {/* Footer Buttons */}
+        <div className="flex gap-4 mt-6">
           <Button type="submit" variant="primary">
             Register Patient
           </Button>
@@ -161,6 +173,7 @@ export const RegisterPatientDrawer: React.FC<Props> = ({ onClose, onSuccess }) =
             Cancel
           </Button>
         </div>
+
       </form>
     </div>
   );
