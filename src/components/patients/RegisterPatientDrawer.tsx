@@ -22,9 +22,10 @@ import { showError, showSuccess } from "../../utils/toastUtils";
 
 type Props = {
   onClose: () => void;
+  onSuccess?: () => void;
 };
 
-export const RegisterPatientDrawer: React.FC<Props> = ({ onClose }) => {
+export const RegisterPatientDrawer: React.FC<Props> = ({ onClose, onSuccess }) => {
   const [form, setForm] = useState<PatientRegistrationPayload>(
     defaultPatientRegistrationPayload
   );
@@ -33,11 +34,6 @@ export const RegisterPatientDrawer: React.FC<Props> = ({ onClose }) => {
   const onContactChange = handleArrayChange(setForm, "contacts", 0);
   const onEmergencyChange = handleArrayChange(setForm, "emergencyContacts", 0);
 
-  // const handleSubmit = (e: React.FormEvent) => {
-  //     e.preventDefault();
-  //     console.log("Quick Registration Form:", form);
-  //     // Add validation + API integration here
-  // };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const fullName = `${form.firstName} ${form.middleName || ""} ${
@@ -47,11 +43,11 @@ export const RegisterPatientDrawer: React.FC<Props> = ({ onClose }) => {
     const { success, data, error } = await createPatient(form);
     if (success) {
       console.log("Patient created successfully:", data);
-      showSuccess("Quick Registration Sucessfull", fullName);
-
-      onClose(); // Optional: close drawer after success
+      showSuccess("Quick Registration Successful", fullName);
+      if (onSuccess) onSuccess(); // Refresh the list
+      onClose(); // Close drawer
     } else {
-      showError("Error Creating Pateint", fullName);
+      showError("Error Creating Patient", fullName);
       console.error("Error creating patient:", error);
     }
   };
@@ -169,6 +165,7 @@ export const RegisterPatientDrawer: React.FC<Props> = ({ onClose }) => {
             onChange={onEmergencyChange}
           />
         </FormField>
+
         <FormField label="Identifier Type" required>
           <Select
             name="identifierType"
@@ -203,8 +200,7 @@ export const RegisterPatientDrawer: React.FC<Props> = ({ onClose }) => {
           </Link>
         </div>
 
-        {/* Footer Buttons */}
-        <div className="flex gap-4 mt-6">
+        <div className="flex gap-4 mt-6 col-span-2">
           <Button type="submit" variant="primary">
             Register Patient
           </Button>
