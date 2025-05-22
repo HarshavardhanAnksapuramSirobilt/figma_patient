@@ -1,8 +1,3 @@
-// ✅ RegisterPatientDrawer.tsx - NO changes needed
-// Still emits `onSuccess()` when registration is complete (already correct)
-
-// ✅ PatientListPage.tsx - adjust to listen for "refresh trigger" from localStorage
-
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -14,7 +9,6 @@ import { FaEdit, FaTrashAlt, FaEye, FaSearch } from "react-icons/fa";
 import PatientViewModal from "../components/patients/PatientViewModal";
 import { showError, showSuccess } from "../utils/toastUtils";
 import ConfirmDialog from "../utils/ConfirmDialog";
-import { RegisterPatientDrawer } from "../components/patients/RegisterPatientDrawer";
 
 const debounce = (func: (...args: any[]) => void, delay: number) => {
   let timeoutId: ReturnType<typeof setTimeout>;
@@ -24,21 +18,13 @@ const debounce = (func: (...args: any[]) => void, delay: number) => {
   };
 };
 
-const fields = ["firstName", "lastName", "email", "mobile", "city"];
-
 const PatientListPage = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [patients, setPatients] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [showViewModal, setShowViewModal] = useState(false);
 
-  const [filters, setFilters] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    mobile: "",
-    city: "",
-  });
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
@@ -47,19 +33,15 @@ const PatientListPage = () => {
   const navigate = useNavigate();
 
   const debouncedSearch = useRef(
-    debounce((updatedFilters: typeof filters) => {
-      searchPatients(updatedFilters).then(setPatients);
+    debounce((query: string) => {
+      searchPatients({ query }).then(setPatients);
     }, 400)
   ).current;
 
-  const handleRefresh = () => {
-    setRefreshTrigger((prev) => prev + 1);
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const updated = { ...filters, [e.target.name]: e.target.value };
-    setFilters(updated);
-    debouncedSearch(updated);
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    debouncedSearch(query);
   };
 
   const handleDeleteClick = (id: string) => {
@@ -79,7 +61,7 @@ const PatientListPage = () => {
 
     const success = await deletePatientById(pendingDeleteId);
     if (success) {
-      searchPatients(filters).then(setPatients);
+      searchPatients({ query: searchQuery }).then(setPatients);
       showSuccess("Patient Deleted Successfully", fullName);
     } else {
       showError("Failed To Delete Patient", fullName);
@@ -104,22 +86,35 @@ const PatientListPage = () => {
   };
 
   useEffect(() => {
-    const handleRefreshEvent = () => handleRefresh();
-  
-    // ✅ Listen to the global event
+    const handleRefreshEvent = () => setRefreshTrigger((prev) => prev + 1);
+
+    // Listen to the global event
     window.addEventListener("patient:registered", handleRefreshEvent);
-  
+
     // Cleanup on unmount
     return () => {
       window.removeEventListener("patient:registered", handleRefreshEvent);
     };
   }, []);
-  
 
-  // 🔄 Actual fetch call (triggered by search or refresh)
+  // Triggered by search or refresh
   useEffect(() => {
-    searchPatients(filters).then(setPatients);
-  }, [refreshTrigger]);
+    searchPatients({ query: searchQuery }).then(setPatients);
+  }, [refreshTrigger, searchQuery]);
+
+  // Highlight the matched text
+  const highlightText = (text: string, query: string) => {
+    if (!query) return text;
+
+    const regex = new RegExp(`(${query})`, "gi");
+    return text.split(regex).map((part, index) =>
+      part.toLowerCase() === query.toLowerCase() ? (
+        <span key={index} className="bg-yellow-300">{part}</span>
+      ) : (
+        part
+      )
+    );
+  };
 
   return (
     <div className="flex flex-col gap-1 w-full p-3">
@@ -128,27 +123,23 @@ const PatientListPage = () => {
           className="btn btn-sm bg-primary text-white hover:bg-primary/90 shadow-md px-4 py-1.5 rounded-md"
           onClick={() => navigate("/patients")}
         >
-          +Register Patient
+          + Register Patient
         </button>
       </div>
 
-      {/* Search Filters */}
-      <div className="bg-white p-4 border border-gray-200 rounded-md shadow-sm space-y-2">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 w-full text-sm">
-          {fields.map((key) => (
-            <div key={key} className="relative w-full">
-              <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
-                <FaSearch className="text-gray-400 w-4 h-4" />
-              </div>
-              <input
-                name={key}
-                value={filters[key as keyof typeof filters]}
-                onChange={handleInputChange}
-                placeholder={key.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())}
-                className="pl-8 pr-2 py-2 border border-gray-300 rounded text-xs w-full focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-            </div>
-          ))}
+      {/* Search Filter */}
+      <div className="bg-white p-4 border border-gray-200 rounded-md shadow-sm">
+        <div className="relative w-full">
+          <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+            <FaSearch className="text-gray-400 w-4 h-4" />
+          </div>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={handleSearchInputChange}
+            placeholder="Search by firstname or middlename or lastname or email or phone"
+            className="pl-8 pr-2 py-2 border border-gray-300 rounded text-xs w-full focus:outline-none focus:ring-1 focus:ring-primary"
+          />
         </div>
       </div>
 
@@ -174,41 +165,46 @@ const PatientListPage = () => {
                 </td>
               </tr>
             ) : (
-              patients.map((p: any) => (
-                <tr key={p.patientId} className="hover:bg-gray-50">
-                  <td className="font-medium text-gray-800">
-                    {`${p.firstName || ""} ${p.middleName || ""} ${p.lastName || ""}`}
-                  </td>
-                  <td>{p.phone || "N/A"}</td>
-                  <td>{p.email || "N/A"}</td>
-                  <td>{p.identifierNumber || "N/A"}</td>
-                  <td>{p.age ?? "N/A"}</td>
-                  <td>{p.gender ?? "N/A"}</td>
-                  <td className="text-right space-x-2">
-                    <button
-                      className="btn btn-sm btn-outline btn-circle"
-                      onClick={() => handleView(p.patientId)}
-                      title="View"
-                    >
-                      <FaEye className="text-green-600" />
-                    </button>
-                    <button
-                      className="btn btn-sm btn-outline btn-circle"
-                      onClick={() => navigate(`/patients/${p.patientId}`)}
-                      title="Edit"
-                    >
-                      <FaEdit className="text-blue-600" />
-                    </button>
-                    <button
-                      className="btn btn-sm btn-outline btn-error btn-circle"
-                      onClick={() => handleDeleteClick(p.patientId)}
-                      title="Delete"
-                    >
-                      <FaTrashAlt />
-                    </button>
-                  </td>
-                </tr>
-              ))
+              patients
+                .filter((patient) => {
+                  const searchText = `${patient.firstName} ${patient.lastName} ${patient.email} ${patient.phone}`.toLowerCase();
+                  return searchText.includes(searchQuery.toLowerCase());
+                })
+                .map((p: any) => (
+                  <tr key={p.patientId} className="hover:bg-gray-50">
+                    <td className="font-medium text-gray-800">
+                      {highlightText(`${p.firstName} ${p.lastName}`, searchQuery)}
+                    </td>
+                    <td>{highlightText(p.phone || "N/A", searchQuery)}</td>
+                    <td>{highlightText(p.email || "N/A", searchQuery)}</td>
+                    <td>{highlightText(p.identifierNumber || "N/A", searchQuery)}</td>
+                    <td>{p.age ?? "N/A"}</td>
+                    <td>{p.gender ?? "N/A"}</td>
+                    <td className="text-right space-x-2">
+                      <button
+                        className="btn btn-sm btn-outline btn-circle"
+                        onClick={() => handleView(p.patientId)}
+                        title="View"
+                      >
+                        <FaEye className="text-green-600" />
+                      </button>
+                      <button
+                        className="btn btn-sm btn-outline btn-circle"
+                        onClick={() => navigate(`/patients/${p.patientId}`)}
+                        title="Edit"
+                      >
+                        <FaEdit className="text-blue-600" />
+                      </button>
+                      <button
+                        className="btn btn-sm btn-outline btn-error btn-circle"
+                        onClick={() => handleDeleteClick(p.patientId)}
+                        title="Delete"
+                      >
+                        <FaTrashAlt />
+                      </button>
+                    </td>
+                  </tr>
+                ))
             )}
           </tbody>
         </table>
@@ -232,6 +228,3 @@ const PatientListPage = () => {
 };
 
 export default PatientListPage;
-
-// ✅ In RegisterPatientDrawer.tsx, add after success:
-// localStorage.setItem("refreshPatientList", "true");
