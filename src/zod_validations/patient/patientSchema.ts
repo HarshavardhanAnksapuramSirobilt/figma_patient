@@ -1,9 +1,17 @@
 import { z } from "zod";
-import { IdentifierType, RelationType } from "../../types/patientenums";
+import {
+  IdentifierType,
+  ContactMode,
+  PhonePref,
+  RelationType
+} from "../../types/patientenums";
 
-//
-// ✅ Helper Functions
-//
+// --- Reusable Validators ---
+
+const requiredEnum = <T extends Record<string, string>>(enumObj: T, msg: string) =>
+  z.union([z.nativeEnum(enumObj), z.literal(null)])
+    .refine((val) => val !== null, { message: msg });
+
 const requiredDropdown = (msg: string) =>
   z.union([z.string(), z.literal(null)])
     .transform((val) => val ?? "")
@@ -25,7 +33,9 @@ const optionalName = () =>
 const requiredPhone = () =>
   z.union([z.string(), z.literal(null)])
     .transform((val) => val ?? "")
-    .refine((val) => /^\d{10}$/.test(val), { message: " Phone Number is required and must be 10 digit Number" });
+    .refine((val) => /^\d{10}$/.test(val), {
+      message: "Phone Number is required and must be 10 digit Number",
+    });
 
 const optionalPhone = () =>
   z.union([z.string(), z.literal(null)])
@@ -34,13 +44,13 @@ const optionalPhone = () =>
       message: "Mobile must be 10 digits",
     });
 
-    const optionalEmail = () =>
-        z.string()
-          .nullable()
-          .transform((val) => val ?? "")
-          .refine((val) => !val || /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(val), {
-            message: "Invalid email format",
-          });
+const optionalEmail = () =>
+  z.string()
+    .nullable()
+    .transform((val) => val ?? "")
+    .refine((val) => !val || /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(val), {
+      message: "Invalid email format",
+    });
 
 const optionalPincode = () =>
   z.union([z.string(), z.literal(null)])
@@ -52,9 +62,19 @@ const optionalPincode = () =>
 const optionalString = () =>
   z.union([z.string(), z.literal(null)]).transform((val) => val ?? "");
 
-//
-// ✅ Schema
-//
+// --- Contact Schema ---
+
+const contactSchema = z.object({
+  mobileNumber: optionalPhone(),
+  phoneNumber: optionalPhone(),
+  email: optionalEmail(),
+  preferredContactMode: z.nativeEnum(ContactMode).nullable().optional(),
+  phoneContactPreference: z.nativeEnum(PhonePref).nullable().optional(),
+  consentToShare: z.boolean().optional(),
+});
+
+// --- Patient Schema ---
+
 export const patientSchema = z.object({
   title: requiredDropdown("Title is required"),
 
@@ -65,47 +85,18 @@ export const patientSchema = z.object({
   dateOfBirth: requiredDropdown("Date of birth is required"),
   gender: requiredDropdown("Gender is required"),
 
-  identifierType: z.nativeEnum(IdentifierType, {
-    errorMap: () => ({ message: "Identifier Type is required" }),
-  }),
+  identifierType: requiredEnum(IdentifierType, "Identifier type is required"),
 
   identifierNumber: z.union([z.string(), z.literal(null)])
     .transform((val) => val ?? "")
-    .refine((val) => val.length > 0, { message: "Identifier Number is required" }),
+    .refine((val) => val.length > 0, { message: "Identifier number is required" })
+    .refine((val) => /^[a-zA-Z0-9]{6,20}$/.test(val), {
+      message: "Identifier must be 6–20 alphanumeric characters",
+    }),
 
-  contacts: z.array(
-    z.object({
-      phoneNumber: requiredPhone(),
-      mobileNumber: optionalPhone(),
-      email: optionalEmail(),
-    })
-  ).min(1, "At least one contact is required"),
-
-  emergencyContacts: z.array(
-    z.object({
-      contactName: requiredName("Contact name is required"),
-      relationship: z.nativeEnum(RelationType, {
-        errorMap: () => ({ message: "Relationship is required" }),
-      }),
-      phoneNumber: requiredPhone(),
-    })
-  ).min(1, "At least one emergency contact is required"),
-
-  addresses: z.array(
-    z.object({
-      pincode: optionalPincode(),
-    })
-  ).optional(),
-
-  abha: z.object({
-    abhaNumber: optionalString(),
-    abhaAddress: optionalString(),
-  }).optional(),
-
-  informationSharing: z.object({
-    shareWithSpouse: z.boolean().optional(),
-    shareWithChildren: z.boolean().optional(),
-    shareWithCaregiver: z.boolean().optional(),
-    shareWithOther: z.boolean().optional(),
-  }).optional(),
+  contacts: z.array(contactSchema)
+    .refine((arr) => !arr.length || !!arr[0].phoneNumber?.trim(), {
+      message: "Primary contact phone number is required",
+      path: ["0", "phoneNumber"],
+    }),
 });
