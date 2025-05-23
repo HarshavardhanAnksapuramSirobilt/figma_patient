@@ -241,7 +241,6 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
 
 
             {/* contacts */}
-            <div>
                 <div className="mb-3  -gray-200 rounded-md shadow-sm p-3 bg-gray-50">
                     <div className="flex justify-between items-center mb-2">
                         <h3 className="text-base font-medium">Contacts</h3>
@@ -301,12 +300,10 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
                     ))}
                 </div>
 
-            </div>
 
 
             {/* Repeat similar pattern for addresses, emergencyContacts, referrals, relationships, tokens */}
             {/* Addresses */}
-            <div>
                 <div className="mb-3  rounded-md shadow-sm p-3 bg-gray-50">
                     <div className="flex justify-between items-center mb-2">
                         <h3 className="text-base font-medium">Addresses</h3>
@@ -361,10 +358,8 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
                         </div>
                     ))}
                 </div>
-            </div>
 
             {/* Emergency Contacts */}
-            <div>
                 <div className="mb-3 border border-gray-200 rounded-md shadow-sm p-3 bg-gray-50">
                     <div className="flex justify-between items-center mb-2">
                         <h3 className="text-base font-medium">Emergency Contacts</h3>
@@ -404,7 +399,6 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
                         </div>
                     ))}
                 </div>
-            </div>
             <div className="mb-3 border border-gray-200 rounded-md shadow-sm p-3 bg-gray-50">
                 <h3 className="text-base font-medium mb-4">Information Sharing Consent</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
