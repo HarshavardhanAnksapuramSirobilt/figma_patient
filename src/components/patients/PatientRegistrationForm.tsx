@@ -31,6 +31,7 @@ import { Button } from "../../commonfields/Button";
 import { createPatient, getPatientById, updatePatient } from "../../services/patientApis";
 import { showSuccess } from "../../utils/toastUtils";
 import { useNavigate } from "react-router-dom";
+import { usePatientFormStore } from "../../store/patientFormStore";
 
 
 type Props = {
@@ -42,6 +43,8 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
         defaultPatientRegistrationPayload
     );
     const [loading, setLoading] = useState(false);
+    const { quickFormData, clearQuickFormData } = usePatientFormStore();
+
 
     const onChange = handleChange(setForm);
     const onContactChange = (index: number) => handleArrayChange(setForm, "contacts", index);
@@ -134,19 +137,26 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
 
     const isEditMode = Boolean(patientId);
     const handleInformationSharingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, checked } = e.target;
-    setForm(prevForm => ({
-        ...prevForm,
-        informationSharing: {
-            ...prevForm.informationSharing,
-            [name]: checked
+        const { name, checked } = e.target;
+        setForm(prevForm => ({
+            ...prevForm,
+            informationSharing: {
+                ...prevForm.informationSharing,
+                [name]: checked
+            }
+        }));
+    };
+
+    useEffect(() => {
+        if (!patientId && quickFormData && quickFormData.firstName) {
+            setForm(quickFormData);
+            clearQuickFormData(); // Optional: clear after loading
         }
-    }));
-};
+    }, []);
 
 
     return (
-      
+
         <form onSubmit={handleSubmit} className="space-y-10 px-6 py-2 bg-white shadow-xl rounded-xl">
 
             <div className="text-center mb-1">
@@ -396,27 +406,27 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
                 </div>
             </div>
             <div className="mb-3 border border-gray-200 rounded-md shadow-sm p-3 bg-gray-50">
-    <h3 className="text-base font-medium mb-4">Information Sharing Consent</h3>
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-            { label: "Share With Spouse", name: "shareWithSpouse" },
-            { label: "Share With Children", name: "shareWithChildren" },
-            { label: "Share With Caregiver", name: "shareWithCaregiver" },
-            { label: "Share With Other", name: "shareWithOther" }
-        ].map(({ label, name }) => (
-            <label key={name} className="flex items-center space-x-2 p-2 bg-white rounded border border-gray-200 shadow-sm hover:shadow-md transition">
-                <input
-                    type="checkbox"
-                    name={name}
-                    checked={form.informationSharing?.[name] || false}
-                    onChange={handleInformationSharingChange}
-                    className="form-checkbox h-5 w-5 text-indigo-600"
-                />
-                <span className="text-sm text-gray-700 font-medium">{label}</span>
-            </label>
-        ))}
-    </div>
-</div>
+                <h3 className="text-base font-medium mb-4">Information Sharing Consent</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {[
+                        { label: "Share With Spouse", name: "shareWithSpouse" },
+                        { label: "Share With Children", name: "shareWithChildren" },
+                        { label: "Share With Caregiver", name: "shareWithCaregiver" },
+                        { label: "Share With Other", name: "shareWithOther" }
+                    ].map(({ label, name }) => (
+                        <label key={name} className="flex items-center space-x-2 p-2 bg-white rounded border border-gray-200 shadow-sm hover:shadow-md transition">
+                            <input
+                                type="checkbox"
+                                name={name}
+                                checked={form.informationSharing?.[name] || false}
+                                onChange={handleInformationSharingChange}
+                                className="form-checkbox h-5 w-5 text-indigo-600"
+                            />
+                            <span className="text-sm text-gray-700 font-medium">{label}</span>
+                        </label>
+                    ))}
+                </div>
+            </div>
 
 
 

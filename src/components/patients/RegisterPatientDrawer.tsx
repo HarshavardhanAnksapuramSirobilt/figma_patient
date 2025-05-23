@@ -1,4 +1,3 @@
-// RegisterPatientDrawer.tsx
 import React, { useState } from "react";
 import { handleChange, handleArrayChange } from "../../hooks/useFormHandlers";
 import { defaultPatientRegistrationPayload } from "../../types/patient";
@@ -17,6 +16,8 @@ import {
 } from "../../types/patientenums";
 import { createPatient } from "../../services/patientApis";
 import { showError, showSuccess } from "../../utils/toastUtils";
+import { usePatientFormStore } from "../../store/patientFormStore";
+
 
 type Props = {
   onClose: () => void;
@@ -28,7 +29,8 @@ export const RegisterPatientDrawer: React.FC<Props> = ({ onClose, onSuccess }) =
 
   const onBasicChange = handleChange(setForm);
   const onContactChange = handleArrayChange(setForm, "contacts", 0);
-  const onEmergencyChange = handleArrayChange(setForm, "emergencyContacts", 0);
+  const onEmergencyChange = handleArrayChange(setForm, "emergencyContacts", 0);  
+  const { setQuickFormData } = usePatientFormStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -158,7 +160,7 @@ export const RegisterPatientDrawer: React.FC<Props> = ({ onClose, onSuccess }) =
           <Link
             to="/patients"
             className="text-sm text-blue-600 hover:underline"
-            onClick={onClose}
+            onClick={()=>{setQuickFormData(form);onClose()}}
           >
             + Add more details
           </Link>
