@@ -91,6 +91,32 @@ export const deletePatientById = async (id: string) => {
   }
 };
 
+export const getPatientsPaginated = async ({
+  page,
+  size,
+  query,
+}: {
+  page: number;
+  size: number;
+  query: string;
+}) => {
+  try {
+    const response = await axios.get(`${BASE_URL}/patients/query`, {
+      params: {
+        page,
+        size,
+        query: query || "",
+      },
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error("Paginated fetch error:", error.response?.data || error.message);
+    throw new Error("Failed to fetch patients with pagination");
+  }
+};
+
+
+
 
 
 
