@@ -12,7 +12,7 @@ export const showSuccess = (message: string, fullName: string): void => {
             <FaCheckCircle style={{ color: 'green', marginTop: '4px' }} />
             <div>
                 <strong>{message}</strong><br />
-                PateintName: <span style={{ fontWeight: 600 }}>{fullName}</span>
+                 <span style={{ fontWeight: 600 }}>{fullName}</span>
             </div>
         </div>,
         {
