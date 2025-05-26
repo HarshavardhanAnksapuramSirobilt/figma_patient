@@ -256,11 +256,12 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
                         <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-3 p-3 mb-2 bg-white  rounded-md">
                             <FormField label="Primary Phone Number" required={index === 0}>
                                 <Input className="text-sm py-1 px-2" name="phoneNumber" value={contact.phoneNumber || ""} onChange={onContactChange(index)} />
-
+                                {/* <FormMessage>{formErrors?.[`contacts.${index}.phoneNumber`]}</FormMessage> */}
                                 {index === 0 && (<FormMessage>{formErrors["contacts.0.phoneNumber"]}</FormMessage>)}
                             </FormField>
-                            <FormField label="Secondary Mobile Number">
+                            <FormField label="Alternate Number">
                                 <Input className="text-sm py-1 px-2" name="mobileNumber" value={contact.mobileNumber || ""} onChange={onContactChange(index)} />
+                                <FormMessage>{formErrors?.[`contacts.${index}.mobileNumber`]}</FormMessage>
                             </FormField>
                             <FormField label="Email">
                                 <Input className="text-sm py-1 px-2" name="email" value={contact.email || ""} onChange={onContactChange(index)} />
