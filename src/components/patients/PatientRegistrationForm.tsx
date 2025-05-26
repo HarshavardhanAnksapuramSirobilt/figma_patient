@@ -241,7 +241,6 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
 
 
             {/* contacts */}
-            <div>
                 <div className="mb-3  -gray-200 rounded-md shadow-sm p-3 bg-gray-50">
                     <div className="flex justify-between items-center mb-2">
                         <h3 className="text-base font-medium">Contacts</h3>
@@ -301,70 +300,123 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
                     ))}
                 </div>
 
-            </div>
 
 
             {/* Repeat similar pattern for addresses, emergencyContacts, referrals, relationships, tokens */}
             {/* Addresses */}
-            <div>
-                <div className="mb-3  rounded-md shadow-sm p-3 bg-gray-50">
-                    <div className="flex justify-between items-center mb-2">
-                        <h3 className="text-base font-medium">Addresses</h3>
-                        <button
-                            type="button"
-                            className="text-xs text-indigo-600 font-medium  -indigo-300 px-2 py-1 rounded hover:bg-indigo-50 transition"
-                            onClick={() => addArrayItem(setForm, "addresses", {})}
-                        >
-                            + Add
-                        </button>
-                    </div>
-                    {form.addresses?.map((address, index) => (
-                        <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-3 p-3 mb-2 bg-white  rounded-md">
-                            <FormField label="Address Type">
-                                <Select className="text-sm py-1 px-2" name="addressType" value={address.addressType || ""} onChange={onAddressChange(index)}>
-                                    <option value="">Select</option>
-                                    {addressTypeOptions.map(type => (
-                                        <option key={type} value={type}>{type}</option>
-                                    ))}
-                                </Select>
-                            </FormField>
-                            <FormField label="House/Flat No">
-                                <Input className="text-sm py-1 px-2" name="houseNoOrFlatNo" value={address.houseNoOrFlatNo || ""} onChange={onAddressChange(index)} />
-                            </FormField>
-                            <FormField label="Locality/Sector">
-                                <Input className="text-sm py-1 px-2" name="localityOrSector" value={address.localityOrSector || ""} onChange={onAddressChange(index)} />
-                            </FormField>
-                            <FormField label="City/Village">
-                                <Input className="text-sm py-1 px-2" name="cityOrVillage" value={address.cityOrVillage || ""} onChange={onAddressChange(index)} />
-                            </FormField>
-                            <FormField label="Pincode">
-                                <Input className="text-sm py-1 px-2" name="pincode" value={address.pincode || ""} onChange={onAddressChange(index)} />
-                            </FormField>
-                            <FormField label="District">
-                                <Input className="text-sm py-1 px-2" name="districtId" value={address.districtId || ""} onChange={onAddressChange(index)} />
-                            </FormField>
-                            <FormField label="State">
-                                <Input className="text-sm py-1 px-2" name="stateId" value={address.stateId || ""} onChange={onAddressChange(index)} />
-                            </FormField>
-                            <FormField label="Country">
-                                <Input className="text-sm py-1 px-2" name="country" value={address.country || ""} onChange={onAddressChange(index)} />
-                            </FormField>
-                            <div className="w-full flex justify-end mt-1 md:col-span-5">
-                                <button
-                                    type="button"
-                                    className="text-xs text-red-600 font-medium  -red-300 px-3 py-1 rounded hover:bg-red-50 transition"
-                                    onClick={() => removeArrayItem(setForm, "addresses", index)}
-                                >
-                                    Remove
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
+<div className="mb-6 rounded-lg shadow-md p-5 bg-gray-50">
+  <div className="flex justify-between items-center mb-4 bg-purple-100 p-3 rounded-md">
+    <h3 className="text-lg font-semibold text-purple-800">Address</h3>
+    <button
+      type="button"
+      className="text-sm text-purple-700 font-semibold px-3 py-1 rounded-md hover:bg-purple-200 transition"
+      onClick={() => addArrayItem(setForm, "addresses", {})}
+    >
+      + Add
+    </button>
+  </div>
+
+
+  {form.addresses?.map((address, index) => (
+    <div
+      key={index}
+      className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 mb-5 bg-white rounded-lg shadow-sm border border-gray-200"
+    >
+      <FormField label="Address Type">
+        <Select
+          className="text-sm py-2 px-3 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+          name="addressType"
+          value={address.addressType || ""}
+          onChange={onAddressChange(index)}
+        >
+          <option value="">Select</option>
+          {addressTypeOptions.map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
+        </Select>
+      </FormField>
+
+      <FormField label="House/Flat No">
+        <Input
+          className="text-sm py-2 px-3 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+          name="houseNoOrFlatNo"
+          value={address.houseNoOrFlatNo || ""}
+          onChange={onAddressChange(index)}
+        />
+      </FormField>
+
+      <FormField label="Locality/Sector">
+        <Input
+          className="text-sm py-2 px-3 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+          name="localityOrSector"
+          value={address.localityOrSector || ""}
+          onChange={onAddressChange(index)}
+        />
+      </FormField>
+
+      <FormField label="City/Village">
+        <Input
+          className="text-sm py-2 px-3 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+          name="cityOrVillage"
+          value={address.cityOrVillage || ""}
+          onChange={onAddressChange(index)}
+        />
+      </FormField>
+
+      <FormField label="Pincode">
+        <Input
+          className="text-sm py-2 px-3 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+          name="pincode"
+          value={address.pincode || ""}
+          onChange={onAddressChange(index)}
+        />
+      </FormField>
+
+      <FormField label="District">
+        <Input
+          className="text-sm py-2 px-3 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+          name="districtId"
+          value={address.districtId || ""}
+          onChange={onAddressChange(index)}
+        />
+      </FormField>
+
+      <FormField label="State">
+        <Input
+          className="text-sm py-2 px-3 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+          name="stateId"
+          value={address.stateId || ""}
+          onChange={onAddressChange(index)}
+        />
+      </FormField>
+
+      <FormField label="Country">
+        <Input
+          className="text-sm py-2 px-3 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+          name="country"
+          value={address.country || ""}
+          onChange={onAddressChange(index)}
+        />
+      </FormField>
+
+      {/* Remove button spans full row on smaller screens */}
+      <div className="md:col-span-3 lg:col-span-4 flex justify-end items-center mt-1">
+        <button
+          type="button"
+          className="text-xs text-red-600 font-semibold px-3 py-1 rounded-md hover:bg-red-100 transition"
+          onClick={() => removeArrayItem(setForm, "addresses", index)}
+          aria-label={`Remove address ${index + 1}`}
+        >
+          Remove
+        </button>
+      </div>
+    </div>
+  ))}
+</div>
 
             {/* Emergency Contacts */}
-            <div>
                 <div className="mb-3 border border-gray-200 rounded-md shadow-sm p-3 bg-gray-50">
                     <div className="flex justify-between items-center mb-2">
                         <h3 className="text-base font-medium">Emergency Contacts</h3>
@@ -404,7 +456,6 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
                         </div>
                     ))}
                 </div>
-            </div>
             <div className="mb-3 border border-gray-200 rounded-md shadow-sm p-3 bg-gray-50">
                 <h3 className="text-base font-medium mb-4">Information Sharing Consent</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
