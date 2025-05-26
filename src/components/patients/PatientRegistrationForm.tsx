@@ -29,7 +29,7 @@ import { Select } from "../../commonfields/Select";
 import { Calendar } from "../../commonfields/Calendar";
 import { Button } from "../../commonfields/Button";
 import { createPatient, getPatientById, updatePatient } from "../../services/patientApis";
-import { showSuccess } from "../../utils/toastUtils";
+import { showError, showSuccess } from "../../utils/toastUtils";
 import { useNavigate } from "react-router-dom";
 import { usePatientFormStore } from "../../store/patientFormStore";
 
@@ -68,18 +68,20 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
             if (patientId) {
                 const { success, error } = await updatePatient(patientId, form);
                 if (success) {
-                    showSuccess("Patient updated successfully", fullName);
+                    showSuccess("Patient updated successfully",`Patient Name:${fullName}`);
                     navigate("/list")
                 } else {
                     console.log(error)
+                    showError("Update Failed", `Error updating patient`);
                 }
             } else {
                 const { success, error } = await createPatient(form);
                 if (success) {
-                    showSuccess("Patient Created Successfully", fullName);
+                    showSuccess("Patient Created Successfully", `Patient Name:${fullName}`);
                     navigate("/list")
                 } else {
                     console.log(error)
+                    showError("Creating Patient Failed", `Error in craeting patient`);
                 }
             }
         } catch (error: any) {
