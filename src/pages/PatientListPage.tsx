@@ -373,7 +373,7 @@ const PatientListPage = () => {
             type="text"
             value={searchQuery}
             onChange={handleSearchInputChange}
-            placeholder="Search by firstname, lastname, email or id"
+            placeholder="Search by firstname, lastname, email,phone number, id"
             className="pl-8 pr-2 py-2 border border-gray-300 rounded text-xs w-full focus:outline-none focus:ring-1 focus:ring-primary"
           />
         </div>
@@ -404,7 +404,7 @@ const PatientListPage = () => {
               patients.map((p: any) => (
                 <tr key={p.patientId} className="hover:bg-gray-50">
                   <td className="font-medium text-gray-800">
-                    {highlightText(`${p.firstName} ${p.lastName}`, searchQuery)}
+                    {highlightText(`${p.firstName} ${p.middleName} ${p.lastName}`, searchQuery)}
                   </td>
                   <td>{highlightText(p.phone || "N/A", searchQuery)}</td>
                   <td>{highlightText(p.email || "N/A", searchQuery)}</td>
