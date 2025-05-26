@@ -99,4 +99,37 @@ export const patientSchema = z.object({
       message: "Primary contact phone number is required",
       path: ["0", "phoneNumber"],
     }),
+
+//   contacts: z.array(contactSchema).superRefine((contacts, ctx) => {
+//   contacts.forEach((contact, index) => {
+//     const phone = contact.phoneNumber?.trim() ?? "";
+
+//     if (index === 0) {
+//       // Required at index 0
+//       if (!phone) {
+//         ctx.addIssue({
+//           path: [index, "phoneNumber"],
+//           code: z.ZodIssueCode.custom,
+//           message: "Primary contact phone number is required",
+//         });
+//       } else if (!/^\d{10}$/.test(phone)) {
+//         ctx.addIssue({
+//           path: [index, "phoneNumber"],
+//           code: z.ZodIssueCode.custom,
+//           message: "Phone number must be 10 digits",
+//         });
+//       }
+//     } else {
+//       // Optional but must be valid if provided
+//       if (phone && !/^\d{10}$/.test(phone)) {
+//         ctx.addIssue({
+//           path: [index, "phoneNumber"],
+//           code: z.ZodIssueCode.custom,
+//           message: "Phone number must be 10 digits",
+//         });
+//       }
+//     }
+//   });
+// }),
+
 });
