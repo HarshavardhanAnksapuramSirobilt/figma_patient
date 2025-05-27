@@ -38,19 +38,26 @@ const requiredPhone = () =>
     });
 
 const optionalPhone = () =>
-  z.union([z.string(), z.literal(null)])
-    .transform((val) => val ?? "")
-    .refine((val) => !val || /^\d{10}$/.test(val), {
-      message: "Mobile must be 10 digits",
-    });
+  z.preprocess(
+    (val) => (val === null || val === undefined ? "" : val),
+    z.string().refine(
+      (val) => val === "" || /^\d{10}$/.test(val),
+      { message: "Mobile must be 10 digits" }
+    )
+  );
+
 
 const optionalEmail = () =>
-  z.string()
-    .nullable()
-    .transform((val) => val ?? "")
-    .refine((val) => !val || /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(val), {
-      message: "Invalid email format",
-    });
+  z.preprocess(
+    (val) => (val === null || val === undefined ? "" : val),
+    z.string().refine(
+      (val) => val === "" || /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(val),
+      {
+        message: "Invalid email format",
+      }
+    )
+  );
+
 
 const optionalPincode = () =>
   z.union([z.string(), z.literal(null)])
@@ -59,8 +66,6 @@ const optionalPincode = () =>
       message: "Pincode must be 6 digits",
     });
 
-const optionalString = () =>
-  z.union([z.string(), z.literal(null)]).transform((val) => val ?? "");
 
 // --- Contact Schema ---
 
@@ -72,6 +77,38 @@ const contactSchema = z.object({
   phoneContactPreference: z.nativeEnum(PhonePref).nullable().optional(),
   consentToShare: z.boolean().optional(),
 });
+
+const contactsSchema = z.array(contactSchema).superRefine((contacts, ctx) => {
+  contacts.forEach((contact, index) => {
+    const phone = (contact.phoneNumber ?? "").trim();
+
+    if (index === 0) {
+      if (!phone) {
+        ctx.addIssue({
+          path: [index, "phoneNumber"],
+          code: z.ZodIssueCode.custom,
+          message: "Primary contact phone number is required",
+        });
+      } else if (!/^\d{10}$/.test(phone)) {
+        ctx.addIssue({
+          path: [index, "phoneNumber"],
+          code: z.ZodIssueCode.custom,
+          message: "Phone number must be 10 digits",
+        });
+      }
+    } else {
+      if (phone && !/^\d{10}$/.test(phone)) {
+        ctx.addIssue({
+          path: [index, "phoneNumber"],
+          code: z.ZodIssueCode.custom,
+          message: "Phone number must be 10 digits",
+        });
+      }
+    }
+  });
+});
+
+
 
 // --- Patient Schema ---
 
@@ -94,42 +131,7 @@ export const patientSchema = z.object({
       message: "Identifier must be 6–20 alphanumeric characters",
     }),
 
-  contacts: z.array(contactSchema)
-    .refine((arr) => !arr.length || !!arr[0].phoneNumber?.trim(), {
-      message: "Primary contact phone number is required",
-      path: ["0", "phoneNumber"],
-    }),
+  contacts: contactsSchema,
 
-//   contacts: z.array(contactSchema).superRefine((contacts, ctx) => {
-//   contacts.forEach((contact, index) => {
-//     const phone = contact.phoneNumber?.trim() ?? "";
-
-//     if (index === 0) {
-//       // Required at index 0
-//       if (!phone) {
-//         ctx.addIssue({
-//           path: [index, "phoneNumber"],
-//           code: z.ZodIssueCode.custom,
-//           message: "Primary contact phone number is required",
-//         });
-//       } else if (!/^\d{10}$/.test(phone)) {
-//         ctx.addIssue({
-//           path: [index, "phoneNumber"],
-//           code: z.ZodIssueCode.custom,
-//           message: "Phone number must be 10 digits",
-//         });
-//       }
-//     } else {
-//       // Optional but must be valid if provided
-//       if (phone && !/^\d{10}$/.test(phone)) {
-//         ctx.addIssue({
-//           path: [index, "phoneNumber"],
-//           code: z.ZodIssueCode.custom,
-//           message: "Phone number must be 10 digits",
-//         });
-//       }
-//     }
-//   });
-// }),
 
 });

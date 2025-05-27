@@ -68,7 +68,7 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
             if (patientId) {
                 const { success, error } = await updatePatient(patientId, form);
                 if (success) {
-                    showSuccess("Patient updated successfully",`Patient Name:${fullName}`);
+                    showSuccess("Patient updated successfully", `Patient Name:${fullName}`);
                     navigate("/list")
                 } else {
                     console.log(error)
@@ -92,6 +92,8 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
                     fieldErrors[path] = e.message;
                 });
                 setFormErrors(fieldErrors);
+                showError("Fix errors in form", "Please correct the highlighted errors before submitting.");
+
             } else {
                 console.error("Unexpected error:", error);
             }
@@ -259,8 +261,9 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
                         <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-3 p-3 mb-2 bg-white  rounded-md">
                             <FormField label="Primary Phone Number" required={index === 0}>
                                 <Input className="text-sm py-1 px-2" name="phoneNumber" value={contact.phoneNumber || ""} onChange={onContactChange(index)} />
-                                {/* <FormMessage>{formErrors?.[`contacts.${index}.phoneNumber`]}</FormMessage> */}
-                                {index === 0 && (<FormMessage>{formErrors["contacts.0.phoneNumber"]}</FormMessage>)}
+                                <FormMessage>
+                                    {formErrors?.[`contacts.${index}.phoneNumber`] || (index === 0 && formErrors?.["contacts.0.phoneNumber"])}
+                                </FormMessage>
                             </FormField>
                             <FormField label="Alternate Number">
                                 <Input className="text-sm py-1 px-2" name="mobileNumber" value={contact.mobileNumber || ""} onChange={onContactChange(index)} />
@@ -268,6 +271,7 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
                             </FormField>
                             <FormField label="Email">
                                 <Input className="text-sm py-1 px-2" name="email" value={contact.email || ""} onChange={onContactChange(index)} />
+                                <FormMessage>{formErrors?.[`contacts.${index}.email`]}</FormMessage>
                             </FormField>
                             <FormField label="Preferred Contact Mode">
                                 <Select className="text-sm py-1 px-2" name="preferredContactMode" value={contact.preferredContactMode || ""} onChange={onContactChange(index)}>
