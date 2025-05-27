@@ -28,7 +28,6 @@ import { FormField } from "../../commonfields/FormField";
 import { Input } from "../../commonfields/Input";
 import { Select } from "../../commonfields/Select";
 import { Calendar } from "../../commonfields/Calendar";
-import { Button } from "../../commonfields/Button";
 import { createPatient, getPatientById, updatePatient } from "../../services/patientApis";
 import { showError, showSuccess } from "../../utils/toastUtils";
 import { useNavigate } from "react-router-dom";
@@ -55,7 +54,6 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
     const onEmergencyChange = (index: number) => handleArrayChange(setForm, "emergencyContacts", index);
     const onReferralChange = (index: number) => handleArrayChange(setForm, "referrals", index);
     const onRelationshipChange = (index: number) => handleArrayChange(setForm, "relationships", index);
-    const onTokenChange = (index: number) => handleArrayChange(setForm, "tokens", index);
     const onObjectChange = (key: keyof PatientRegistrationPayload) => handleObjectChange(setForm, key);
     const navigate = useNavigate();
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});    // const handleSubmit = (e: React.FormEvent) => {
@@ -78,8 +76,9 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
                     showError("Update Failed", `Error updating patient`);
                 }
             } else {
-                const { success, error } = await createPatient(form);
+                const { success, error,data} = await createPatient(form);
                 if (success) {
+                    console.log("Created Patient:", data);
                     showSuccess("Patient Created Successfully", `Patient Name:${fullName}`);
                     navigate("/list")
                 } else {
@@ -764,48 +763,6 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
             </div>
 
 
-            {/* Relationships */}
-            {/* <div>
-                <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-lg font-semibold">Relationships</h3>
-                    <div className="col-span-1 text-right">
-                        <Button
-                            type="button"
-                            className="btn btn-sm btn-outline"
-                            onClick={() => addArrayItem(setForm, "relationships", {})}
-                        >
-                            + Add
-                        </Button>
-                    </div>
-                </div>
-
-                {form.relationships?.map((relationship, index) => (
-                    <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-4  p-4 mb-2">
-                        <FormField label="Relative ID">
-                            <Input name="relativeId" value={relationship.relativeId || ""} onChange={onRelationshipChange(index)} />
-                        </FormField>
-                        <FormField label="Relationship Type">
-                            <Select name="relationshipType" value={relationship.relationshipType || ""} onChange={onRelationshipChange(index)}>
-                                <option value="">Select</option>
-                                {relationTypeOptions.map(r => (
-                                    <option key={r} value={r}>{r}</option>
-                                ))}
-                            </Select>
-                        </FormField>
-
-                        <div className="w-1/4 flex justify-end mt-4">
-                            <Button
-                                type="button"
-                                className="btn btn-sm btn-outline text-red-600 -red-500 hover:bg-red-50 w-auto"
-                                onClick={() => removeArrayItem(setForm, "relationships", index)}
-                            >
-                                Remove
-                            </Button>
-                        </div>
-                    </div>
-                ))}
-            </div> */}
-
             {/* insurance */}
             <div className="mb-3 border border-gray-200 rounded-md shadow-sm p-3 bg-gray-50">
                 <h3 className="text-base font-medium mb-2">Insurance</h3>
@@ -853,66 +810,6 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
                     </FormField>
                 </div>
             </div>
-
-
-
-
-            {/* Tokens */}
-            {/* <div>
-                <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-lg font-semibold">Tokens</h3>
-                    <div className="col-span-1 text-right">
-                        <Button
-                            type="button"
-                            className="btn btn-sm btn-outline"
-                            onClick={() => addArrayItem(setForm, "tokens", {})}
-                        >
-                            + Add
-                        </Button>
-                    </div>
-                </div>
-
-                {form.tokens?.map((token, index) => (
-                    <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-4  p-4 mb-2">
-                        <FormField label="Token Number">
-                            <Input name="tokenNumber" value={token.tokenNumber || ""} onChange={onTokenChange(index)} />
-                        </FormField>
-                        <FormField label="Issue Date">
-                            <Calendar name="issueDate" value={token.issueDate || ""} onChange={onTokenChange(index)} />
-                        </FormField>
-                        <FormField label="Expiry Date">
-                            <Calendar name="expiryDate" value={token.expiryDate || ""} onChange={onTokenChange(index)} />
-                        </FormField>
-                        <FormField label="Allocated To">
-                            <Input name="allocatedTo" value={token.allocatedTo || ""} onChange={onTokenChange(index)} />
-                        </FormField>
-                        <FormField label="Status">
-                            <Select name="status" value={token.status || ""} onChange={onTokenChange(index)}>
-                                <option value="">Select</option>
-                                <option value="Active">Active</option>
-                                <option value="Expired">Expired</option>
-                                <option value="Pending">Pending</option>
-                            </Select>
-                        </FormField>
-                        <FormField label="Is Registered">
-                            <Select name="isRegistered" value={String(token.isRegistered)} onChange={onTokenChange(index)}>
-                                <option value="true">Yes</option>
-                                <option value="false">No</option>
-                            </Select>
-                        </FormField>
-
-                        <div className="w-1/4 flex justify-end mt-4">
-                            <Button
-                                type="button"
-                                className="btn btn-sm btn-outline text-red-600 -red-500 hover:bg-red-50 w-auto"
-                                onClick={() => removeArrayItem(setForm, "tokens", index)}
-                            >
-                                Remove
-                            </Button>
-                        </div>
-                    </div>
-                ))}
-            </div> */}
             <div className="flex justify-center w-full max-w-5xl mx-auto gap-4 px-6">
                 <button
                     type="submit"

@@ -9,7 +9,7 @@ export function mapAbhaProfileToPatient(abhaProfile: any): Partial<PatientRegist
     firstName: abhaProfile.firstName || null,
     middleName: abhaProfile.middleName || null,
     lastName: abhaProfile.lastName || null,
-    dateOfBirth: abhaProfile.dob || null,
+    dateOfBirth: convertDobToIsoFormat(abhaProfile.dob),
     gender: abhaProfile.gender === "M" ? Gender.Male : abhaProfile.gender === "F" ? Gender.Female : Gender.Other,
 
     contacts: [
@@ -37,3 +37,14 @@ export function mapAbhaProfileToPatient(abhaProfile: any): Partial<PatientRegist
     },
   };
 }
+
+
+function convertDobToIsoFormat(dob: string): string | null {
+  if (!dob) return null;
+
+  const [dd, mm, yyyy] = dob.split("-");
+  if (!dd || !mm || !yyyy) return null;
+
+  return `${yyyy}-${mm}-${dd}`; // Correct format: YYYY-MM-DD
+}
+

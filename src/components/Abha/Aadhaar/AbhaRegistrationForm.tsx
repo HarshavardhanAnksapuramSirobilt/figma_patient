@@ -32,7 +32,9 @@ export default function AbhaRegistrationForm() {
         <StepVerifyOtp
           txnId={txnId}
           onOtpVerified={(responseData) => {
+            console.log("ABHA Response:", responseData);
             const patientData = mapAbhaProfileToPatient(responseData.ABHAProfile);
+            console.log("Mapped Patient Data:", patientData);
             usePatientFormStore.getState().setQuickFormData(patientData);
             setAbhaData(responseData);
             setStep(2);
