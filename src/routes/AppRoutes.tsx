@@ -12,7 +12,7 @@ export const AppRoutes = () => (
       <Route path="patients" element={<PatientPage />} />
       <Route path="/patients/:id" element={<PatientPage />} />
       <Route path="list" element={<PatientListPage />} />
-      <Route path="/abha-registration" element={<AbhaRegistrationForm />} />
+      <Route path="/abha-aadhaar" element={<AbhaRegistrationForm />} />
 
     </Route>
     
