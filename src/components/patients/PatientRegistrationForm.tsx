@@ -248,6 +248,32 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
                 <h2 className="text-lg font-semibold">{isEditMode ? "Edit Patient" : "Patient Registration"}</h2>
             </div>
 
+            <div className="mb-3 bg-gray-50 rounded-md shadow-sm p-3">
+                <h3 className="text-base font-medium mb-3">ABHA Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <FormField label="ABHA Number">
+                        <Input
+                            className="text-sm py-1 px-2"
+                            name="abhaNumber"
+                            value={form.abha?.abhaNumber || ""}
+                            onChange={onObjectChange("abha")}
+                        />
+                        <FormMessage>{formErrors?.abhaNumber}</FormMessage>
+                    </FormField>
+
+                    <FormField label="ABHA Address">
+                        <Input
+                            className="text-sm py-1 px-2"
+                            name="abhaAddress"
+                            value={form.abha?.abhaAddress || ""}
+                            onChange={onObjectChange("abha")}
+                        />
+                        <FormMessage>{formErrors?.abhaAddress}</FormMessage>
+                    </FormField>
+                </div>
+            </div>
+
+
             <div className="mb-3  -gray-200 rounded-md shadow-sm p-3 bg-gray-50">
                 <h3 className="text-base font-medium mb-3">Basic Info</h3>
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-3">

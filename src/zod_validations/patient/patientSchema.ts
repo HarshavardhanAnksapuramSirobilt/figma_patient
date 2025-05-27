@@ -127,7 +127,7 @@ export const patientSchema = z.object({
   identifierNumber: z.union([z.string(), z.literal(null)])
     .transform((val) => val ?? "")
     .refine((val) => val.length > 0, { message: "Identifier number is required" })
-    .refine((val) => /^[a-zA-Z0-9]{6,20}$/.test(val), {
+    .refine((val) => /^[a-zA-Z0-9-]{6,20}$/.test(val), {
       message: "Identifier must be 6–20 alphanumeric characters",
     }),
 
