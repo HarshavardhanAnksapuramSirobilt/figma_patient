@@ -146,14 +146,14 @@ export const defaultPatientRegistrationPayload: PatientRegistrationPayload = {
   ],
   addresses: [
     {
-      addressType: AddressType.Present,
+      addressType: AddressType.Permanent,
       houseNoOrFlatNo: null,
       localityOrSector: null,
       cityOrVillage: null,
       pincode: null,
       districtId: null,
       stateId: null,
-      country: "India",
+      country: null,
     },
   ],
   abha: {

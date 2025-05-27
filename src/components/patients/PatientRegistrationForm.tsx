@@ -21,7 +21,8 @@ import {
     addressTypeOptions,
     relationTypeOptions,
     billingTypeOptions,
-    identifierTypeOptions, citizenshipOptions, religionOptions, casteOptions, occupationOptions, educationOptions, annualIncomeOptions
+    identifierTypeOptions, citizenshipOptions, religionOptions, casteOptions, occupationOptions, educationOptions, annualIncomeOptions,
+    AddressType
 } from "../../types/patientenums";
 import { FormField } from "../../commonfields/FormField";
 import { Input } from "../../commonfields/Input";
@@ -44,6 +45,8 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
     );
     const [loading, setLoading] = useState(false);
     const { quickFormData, clearQuickFormData } = usePatientFormStore();
+    const [presentSameAsPermanent, setPresentSameAsPermanent] = React.useState(false);
+
 
 
     const onChange = handleChange(setForm);
@@ -68,7 +71,7 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
             if (patientId) {
                 const { success, error } = await updatePatient(patientId, form);
                 if (success) {
-                    showSuccess("Patient updated successfully",`Patient Name:${fullName}`);
+                    showSuccess("Patient updated successfully", `Patient Name:${fullName}`);
                     navigate("/list")
                 } else {
                     console.log(error)
@@ -81,7 +84,7 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
                     navigate("/list")
                 } else {
                     console.log(error)
-                    showError("Creating Patient Failed", `Error in craeting patient`);
+                    showError("Creating Patient Failed", `Error in creating patient`);
                 }
             }
         } catch (error: any) {
@@ -92,6 +95,8 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
                     fieldErrors[path] = e.message;
                 });
                 setFormErrors(fieldErrors);
+                showError("Fix errors in form", "Please correct the highlighted errors before submitting.");
+
             } else {
                 console.error("Unexpected error:", error);
             }
@@ -155,6 +160,84 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
             clearQuickFormData(); // Optional: clear after loading
         }
     }, []);
+
+
+    const addAddress = () => {
+        const hasPermanent = form.addresses?.some(a => a.addressType === "Permanent");
+        const hasPresent = form.addresses?.some(a => a.addressType === "Present");
+
+        if (form.addresses?.length >= 2) {
+            showError("Limit reached", "Only one Permanent and one Present address allowed.");
+            return;
+        }
+
+        if (!hasPermanent) {
+            addArrayItem(setForm, "addresses", {
+                addressType: "Permanent",
+                houseNoOrFlatNo: null,
+                localityOrSector: null,
+                cityOrVillage: null,
+                pincode: null,
+                districtId: null,
+                stateId: null,
+                country: null,
+            });
+        } else if (!hasPresent) {
+            addArrayItem(setForm, "addresses", {
+                addressType: "Present",
+                houseNoOrFlatNo: null,
+                localityOrSector: null,
+                cityOrVillage: null,
+                pincode: null,
+                districtId: null,
+                stateId: null,
+                country: null,
+            });
+        } else {
+            showError("Both addresses added", "You already have Permanent and Present addresses.");
+        }
+    };
+
+    const onAddressTypeChange = (index: number) => (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const newType = e.target.value;
+        const hasPermanent = form.addresses.some((a, i) => a.addressType === "Permanent" && i !== index);
+        const hasPresent = form.addresses.some((a, i) => a.addressType === "Present" && i !== index);
+
+        if (newType === "Permanent" && hasPermanent) {
+            showError("Duplicate Permanent", "Only one Permanent address is allowed.");
+            return; // ignore change
+        }
+        if (newType === "Present" && hasPresent) {
+            showError("Duplicate Present", "Only one Present address is allowed.");
+            return; // ignore change
+        }
+
+        // Update addressType normally if no duplicates
+        setForm(prev => {
+            const addresses = [...(prev.addresses || [])];
+            const typedAddressType = newType === AddressType.Permanent ? AddressType.Permanent : AddressType.Present;
+            addresses[index] = { ...addresses[index], addressType: typedAddressType };
+
+            return { ...prev, addresses };
+        });
+    };
+
+    const onCheckboxChange = (index: number) => {
+        const newVal = !presentSameAsPermanent;
+        setPresentSameAsPermanent(newVal);
+
+        if (newVal) {
+            // Copy Permanent address to Present address at index
+            const permanentAddress = form.addresses.find(a => a.addressType === "Permanent");
+            if (permanentAddress) {
+                setForm(prev => {
+                    const addresses = [...(prev.addresses || [])];
+                    addresses[index] = { ...permanentAddress, addressType: AddressType.Present };
+                    return { ...prev, addresses };
+                });
+            }
+        }
+    };
 
 
     return (
@@ -258,8 +341,9 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
                         <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-3 p-3 mb-2 bg-white  rounded-md">
                             <FormField label="Primary Phone Number" required={index === 0}>
                                 <Input className="text-sm py-1 px-2" name="phoneNumber" value={contact.phoneNumber || ""} onChange={onContactChange(index)} />
-                                {/* <FormMessage>{formErrors?.[`contacts.${index}.phoneNumber`]}</FormMessage> */}
-                                {index === 0 && (<FormMessage>{formErrors["contacts.0.phoneNumber"]}</FormMessage>)}
+                                <FormMessage>
+                                    {formErrors?.[`contacts.${index}.phoneNumber`] || (index === 0 && formErrors?.["contacts.0.phoneNumber"])}
+                                </FormMessage>
                             </FormField>
                             <FormField label="Alternate Number">
                                 <Input className="text-sm py-1 px-2" name="mobileNumber" value={contact.mobileNumber || ""} onChange={onContactChange(index)} />
@@ -267,6 +351,7 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
                             </FormField>
                             <FormField label="Email">
                                 <Input className="text-sm py-1 px-2" name="email" value={contact.email || ""} onChange={onContactChange(index)} />
+                                <FormMessage>{formErrors?.[`contacts.${index}.email`]}</FormMessage>
                             </FormField>
                             <FormField label="Preferred Contact Mode">
                                 <Select className="text-sm py-1 px-2" name="preferredContactMode" value={contact.preferredContactMode || ""} onChange={onContactChange(index)}>
@@ -307,117 +392,148 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
 
             {/* Repeat similar pattern for addresses, emergencyContacts, referrals, relationships, tokens */}
             {/* Addresses */}
-<div className="mb-6 rounded-lg shadow-md p-5 bg-gray-50">
-  <div className="flex justify-between items-center mb-4 bg-purple-100 p-3 rounded-md">
-    <h3 className="text-lg font-semibold text-purple-800">Address</h3>
-    <button
-      type="button"
-      className="text-sm text-purple-700 font-semibold px-3 py-1 rounded-md hover:bg-purple-200 transition"
-      onClick={() => addArrayItem(setForm, "addresses", {})}
-    >
-      + Add
-    </button>
-  </div>
+            <div>
+                <div className="mb-3 rounded-md shadow-sm p-3 bg-gray-50">
+                    <div className="flex justify-between items-center mb-2">
+                        <h3 className="text-base font-medium">Addresses</h3>
+                        <button
+                            type="button"
+                            className="text-xs text-indigo-600 font-medium px-2 py-1 rounded hover:bg-indigo-50 transition"
+                            onClick={addAddress}
+                        >
+                            + Add
+                        </button>
+                    </div>
 
+                    {form.addresses?.map((address, index) => {
+                        const isPresent = address.addressType === "Present";
+                        const permanentAddressExists = form.addresses.some(a => a.addressType === "Permanent");
+                        return (
+                            <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-3 p-3 mb-2 bg-white rounded-md">
 
-  {form.addresses?.map((address, index) => (
-    <div
-      key={index}
-      className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 mb-5 bg-white rounded-lg shadow-sm border border-gray-200"
-    >
-      <FormField label="Address Type">
-        <Select
-          className="text-sm py-2 px-3 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-          name="addressType"
-          value={address.addressType || ""}
-          onChange={onAddressChange(index)}
-        >
-          <option value="">Select</option>
-          {addressTypeOptions.map((type) => (
-            <option key={type} value={type}>
-              {type}
-            </option>
-          ))}
-        </Select>
-      </FormField>
+                                <FormField label="Address Type">
+                                    <Select
+                                        className="text-sm py-1 px-2"
+                                        name="addressType"
+                                        value={address.addressType || ""}
+                                        onChange={onAddressTypeChange(index)}
+                                        disabled={presentSameAsPermanent && isPresent} // disable if checkbox checked & Present address
+                                    >
+                                        <option value="">Select</option>
+                                        {addressTypeOptions.map(type => (
+                                            <option key={type} value={type}>{type}</option>
+                                        ))}
+                                    </Select>
+                                </FormField>
 
-      <FormField label="House/Flat No">
-        <Input
-          className="text-sm py-2 px-3 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-          name="houseNoOrFlatNo"
-          value={address.houseNoOrFlatNo || ""}
-          onChange={onAddressChange(index)}
-        />
-      </FormField>
+                                <FormField label="House/Flat No">
+                                    <Input
+                                        className="text-sm py-1 px-2"
+                                        name="houseNoOrFlatNo"
+                                        value={address.houseNoOrFlatNo || ""}
+                                        onChange={onAddressChange(index)}
+                                        disabled={presentSameAsPermanent && isPresent}
+                                    />
+                                </FormField>
 
-      <FormField label="Locality/Sector">
-        <Input
-          className="text-sm py-2 px-3 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-          name="localityOrSector"
-          value={address.localityOrSector || ""}
-          onChange={onAddressChange(index)}
-        />
-      </FormField>
+                                <FormField label="Locality/Sector">
+                                    <Input
+                                        className="text-sm py-1 px-2"
+                                        name="localityOrSector"
+                                        value={address.localityOrSector || ""}
+                                        onChange={onAddressChange(index)}
+                                        disabled={presentSameAsPermanent && isPresent}
+                                    />
+                                </FormField>
 
-      <FormField label="City/Village">
-        <Input
-          className="text-sm py-2 px-3 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-          name="cityOrVillage"
-          value={address.cityOrVillage || ""}
-          onChange={onAddressChange(index)}
-        />
-      </FormField>
+                                <FormField label="City/Village">
+                                    <Input
+                                        className="text-sm py-1 px-2"
+                                        name="cityOrVillage"
+                                        value={address.cityOrVillage || ""}
+                                        onChange={onAddressChange(index)}
+                                        disabled={presentSameAsPermanent && isPresent}
+                                    />
+                                </FormField>
 
-      <FormField label="Pincode">
-        <Input
-          className="text-sm py-2 px-3 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-          name="pincode"
-          value={address.pincode || ""}
-          onChange={onAddressChange(index)}
-        />
-      </FormField>
+                                <FormField label="Pincode">
+                                    <Input
+                                        className="text-sm py-1 px-2"
+                                        name="pincode"
+                                        value={address.pincode || ""}
+                                        onChange={onAddressChange(index)}
+                                        disabled={presentSameAsPermanent && isPresent}
+                                    />
+                                </FormField>
 
-      <FormField label="District">
-        <Input
-          className="text-sm py-2 px-3 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-          name="districtId"
-          value={address.districtId || ""}
-          onChange={onAddressChange(index)}
-        />
-      </FormField>
+                                <FormField label="District">
+                                    <Input
+                                        className="text-sm py-1 px-2"
+                                        name="districtId"
+                                        value={address.districtId || ""}
+                                        onChange={onAddressChange(index)}
+                                        disabled={presentSameAsPermanent && isPresent}
+                                    />
+                                </FormField>
 
-      <FormField label="State">
-        <Input
-          className="text-sm py-2 px-3 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-          name="stateId"
-          value={address.stateId || ""}
-          onChange={onAddressChange(index)}
-        />
-      </FormField>
+                                <FormField label="State">
+                                    <Input
+                                        className="text-sm py-1 px-2"
+                                        name="stateId"
+                                        value={address.stateId || ""}
+                                        onChange={onAddressChange(index)}
+                                        disabled={presentSameAsPermanent && isPresent}
+                                    />
+                                </FormField>
 
-      <FormField label="Country">
-        <Input
-          className="text-sm py-2 px-3 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-          name="country"
-          value={address.country || ""}
-          onChange={onAddressChange(index)}
-        />
-      </FormField>
+                                <FormField label="Country">
+                                    <Input
+                                        className="text-sm py-1 px-2"
+                                        name="country"
+                                        value={address.country || ""}
+                                        onChange={onAddressChange(index)}
+                                        disabled={presentSameAsPermanent && isPresent}
+                                    />
+                                </FormField>
 
-      {/* Remove button spans full row on smaller screens */}
-      <div className="md:col-span-3 lg:col-span-4 flex justify-end items-center mt-1">
-        <button
-          type="button"
-          className="text-xs text-red-600 font-semibold px-3 py-1 rounded-md hover:bg-red-100 transition"
-          onClick={() => removeArrayItem(setForm, "addresses", index)}
-          aria-label={`Remove address ${index + 1}`}
-        >
-          Remove
-        </button>
-      </div>
-    </div>
-  ))}
-</div>
+                                {/* Checkbox for Present address same as Permanent */}
+                                {isPresent && permanentAddressExists && (
+                                    <div className="md:col-span-5 flex items-center space-x-2 mt-2">
+                                        <input
+                                            type="checkbox"
+                                            id={`presentSameAsPermanent-${index}`}
+                                            checked={presentSameAsPermanent}
+                                            onChange={() => onCheckboxChange(index)}
+                                        />
+                                        <label htmlFor={`presentSameAsPermanent-${index}`}>
+                                            Present address same as Permanent
+                                        </label>
+                                    </div>
+                                )}
+
+                                <div className="w-full flex justify-end mt-1 md:col-span-5">
+                                    <button
+                                        type="button"
+                                        className="text-xs text-red-600 font-medium px-3 py-1 rounded hover:bg-red-50 transition"
+                                        onClick={() => {
+                                            if (form.addresses.length <= 1) {
+                                                showError("Cannot remove", "At least one address must remain.");
+                                                return;
+                                            }
+                                            removeArrayItem(setForm, "addresses", index);
+                                            if (presentSameAsPermanent) setPresentSameAsPermanent(false);
+                                        }}
+                                        disabled={presentSameAsPermanent && isPresent} // prevent removing if checkbox checked on Present address
+                                    >
+                                        Remove
+                                    </button>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+
 
             {/* Emergency Contacts */}
                 <div className="mb-3 border border-gray-200 rounded-md shadow-sm p-3 bg-gray-50">
