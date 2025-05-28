@@ -32,6 +32,8 @@ import { createPatient, getPatientById, updatePatient } from "../../services/pat
 import { showError, showSuccess } from "../../utils/toastUtils";
 import { useNavigate } from "react-router-dom";
 import { usePatientFormStore } from "../../store/patientFormStore";
+import FacilitySelector from "../../commonfields/FacilitySelector";
+
 
 
 type Props = {
@@ -76,7 +78,7 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
                     showError("Update Failed", `Error updating patient`);
                 }
             } else {
-                const { success, error,data} = await createPatient(form);
+                const { success, error, data } = await createPatient(form);
                 if (success) {
                     console.log("Created Patient:", data);
                     showSuccess("Patient Created Successfully", `Patient Name:${fullName}`);
@@ -268,6 +270,20 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
                             onChange={onObjectChange("abha")}
                         />
                         <FormMessage>{formErrors?.abhaAddress}</FormMessage>
+                    </FormField>
+                </div>
+            </div>
+
+            <div className="mb-3 bg-gray-50 rounded-md shadow-sm p-3">
+                <h3 className="text-base font-medium mb-3">Facility Details</h3>
+                <div className="grid grid-cols-1">
+                    <FormField label="Facility">
+                        <FacilitySelector
+                            name="facilityId"
+                            value={form.facilityId || ""}
+                            onChange={onChange}
+                        />
+                        {/* <FormMessage>{formErrors?.facilityId}</FormMessage> */}
                     </FormField>
                 </div>
             </div>
@@ -738,10 +754,18 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
                 {form.referrals?.map((referral, index) => (
                     <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-3 p-3 mb-2 bg-white rounded-md">
                         <FormField label="From Facility ID">
-                            <Input className="text-sm py-1 px-2" name="fromFacilityId" value={referral.fromFacilityId || ""} onChange={onReferralChange(index)} />
+                            <FacilitySelector
+                                name="fromFacilityId"
+                                value={referral.fromFacilityId || ""}
+                                onChange={onReferralChange(index)}
+                            />
                         </FormField>
                         <FormField label="To Facility ID">
-                            <Input className="text-sm py-1 px-2" name="toFacilityId" value={referral.toFacilityId || ""} onChange={onReferralChange(index)} />
+                            <FacilitySelector
+                                name="toFacilityId"
+                                value={referral.toFacilityId || ""}
+                                onChange={onReferralChange(index)}
+                            />
                         </FormField>
                         <FormField label="Referral Date">
                             <Calendar className="text-sm py-1 px-2" name="referralDate" value={referral.referralDate || ""} onChange={onReferralChange(index)} />
