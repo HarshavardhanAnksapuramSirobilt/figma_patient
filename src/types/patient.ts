@@ -79,6 +79,7 @@ export interface Token {
 // --- Main Patient DTO Type ---
 export interface PatientRegistrationPayload {
   patientId?: string;
+  upId?: string;
   facilityId?: string;
   identifierType?: IdentifierType;
   identifierNumber?: string;

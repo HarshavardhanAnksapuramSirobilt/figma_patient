@@ -274,6 +274,7 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
                 </div>
             </div>
 
+            {!isEditMode && (
             <div className="mb-3 bg-gray-50 rounded-md shadow-sm p-3">
                 <h3 className="text-base font-medium mb-3">Facility Details</h3>
                 <div className="grid grid-cols-1">
@@ -283,10 +284,11 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
                             value={form.facilityId || ""}
                             onChange={onChange}
                         />
-                        {/* <FormMessage>{formErrors?.facilityId}</FormMessage> */}
+                        <FormMessage>{formErrors["facilityId"]}</FormMessage>
                     </FormField>
                 </div>
             </div>
+            )}
 
 
             <div className="mb-3  -gray-200 rounded-md shadow-sm p-3 bg-gray-50">
@@ -367,6 +369,7 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
 
 
             {/* contacts */}
+            <div>
                 <div className="mb-3  -gray-200 rounded-md shadow-sm p-3 bg-gray-50">
                     <div className="flex justify-between items-center mb-2">
                         <h3 className="text-base font-medium">Contacts</h3>
@@ -429,6 +432,7 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
                     ))}
                 </div>
 
+            </div>
 
 
             {/* Repeat similar pattern for addresses, emergencyContacts, referrals, relationships, tokens */}
@@ -505,6 +509,7 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
                                         onChange={onAddressChange(index)}
                                         disabled={presentSameAsPermanent && isPresent}
                                     />
+                                      <FormMessage>{formErrors?.[`addresses.${index}.pincode`]}</FormMessage>
                                 </FormField>
 
                                 <FormField label="District">
@@ -577,6 +582,7 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
 
 
             {/* Emergency Contacts */}
+            <div>
                 <div className="mb-3 border border-gray-200 rounded-md shadow-sm p-3 bg-gray-50">
                     <div className="flex justify-between items-center mb-2">
                         <h3 className="text-base font-medium">Emergency Contacts</h3>
@@ -592,6 +598,7 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
                         <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-3 p-3 mb-2 bg-white  rounded-md">
                             <FormField label="Contact Name">
                                 <Input className="text-sm py-1 px-2" name="contactName" value={contact.contactName || ""} onChange={onEmergencyChange(index)} />
+                                  <FormMessage>{formErrors?.[`emergencyContacts.${index}.contactName`]}</FormMessage>
                             </FormField>
                             <FormField label="Relationship">
                                 <Select className="text-sm py-1 px-2" name="relationship" value={contact.relationship || ""} onChange={onEmergencyChange(index)}>
@@ -600,9 +607,11 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
                                         <option key={rel} value={rel}>{rel}</option>
                                     ))}
                                 </Select>
+                                <FormMessage>{formErrors?.[`emergencyContacts.${index}.relationship`]}</FormMessage>
                             </FormField>
                             <FormField label="Phone Number">
                                 <Input className="text-sm py-1 px-2" name="phoneNumber" value={contact.phoneNumber || ""} onChange={onEmergencyChange(index)} />
+                                  <FormMessage>{formErrors?.[`emergencyContacts.${index}.phoneNumber`]}</FormMessage>
                             </FormField>
                             <div className="w-full flex justify-end mt-1 md:col-span-5">
                                 <button
@@ -616,6 +625,7 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
                         </div>
                     ))}
                 </div>
+            </div>
             <div className="mb-3 border border-gray-200 rounded-md shadow-sm p-3 bg-gray-50">
                 <h3 className="text-base font-medium mb-4">Information Sharing Consent</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -736,6 +746,7 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
 
 
             {/* Referrals */}
+            {!isEditMode && (
             <div className="mb-3 rounded-md shadow-sm p-3">
                 <div className="flex justify-between items-center ">
                     <h3 className="text-base font-medium">Referrals</h3>
@@ -781,6 +792,7 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
                     </div>
                 ))}
             </div>
+            )}
 
 
             {/* insurance */}

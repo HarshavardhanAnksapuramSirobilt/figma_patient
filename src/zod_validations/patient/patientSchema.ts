@@ -1,6 +1,6 @@
 import { z } from "zod";
 import {
-  IdentifierType,
+  IdentifierType,AddressType,
   ContactMode,
   PhonePref,
   RelationType
@@ -108,11 +108,71 @@ const contactsSchema = z.array(contactSchema).superRefine((contacts, ctx) => {
   });
 });
 
+const addressSchema = z.object({
+  addressType: z.nativeEnum(AddressType).optional(),
+  houseNoOrFlatNo: z.string().nullable().optional(),
+  localityOrSector: z.string().nullable().optional(),
+  cityOrVillage: z.string().nullable().optional(),
+  pincode: z.string().nullable().optional()
+    .refine((val) => {
+      if (!val) return true; // allow empty/null
+      return /^\d{6}$/.test(val); // must be 6 digits if present
+    }, {
+      message: "Pincode must be exactly 6 digits",
+    }),
+  districtId: z.string().nullable().optional(),
+  stateId: z.string().nullable().optional(),
+  country: z.string().nullable().optional(),
+});
+
+const emergencyContactSchema = z.object({
+  contactName: z.string().nullable().optional(),
+  relationship: z.nativeEnum(RelationType).nullable().optional(),
+  phoneNumber: z.string().nullable().optional(),
+}).superRefine((data, ctx) => {
+  const hasAnyValue =
+    !!data.contactName?.trim() ||
+    !!data.phoneNumber?.trim() ||
+    data.relationship != null;
+
+  if (hasAnyValue) {
+    if (!data.contactName || !/^[A-Za-z\s]+$/.test(data.contactName)) {
+      ctx.addIssue({
+        path: ["contactName"],
+        code: z.ZodIssueCode.custom,
+        message: "Contact name must contain only letters",
+      });
+    }
+
+    if (!data.phoneNumber || !/^\d{10}$/.test(data.phoneNumber)) {
+      ctx.addIssue({
+        path: ["phoneNumber"],
+        code: z.ZodIssueCode.custom,
+        message: "Phone number must be exactly 10 digits",
+      });
+    }
+  }
+});
+
+const requiredString = (msg: string) =>
+  z.preprocess(
+    (val) => {
+      // Accept string or anything else, convert null/undefined/empty to ""
+      if (val === null || val === undefined) return "";
+      if (typeof val === "string") return val.trim();
+      // If not string, convert to empty string (or you can throw here if you want stricter)
+      return "";
+    },
+    z.string().min(1, { message: msg })
+  );
+
 
 
 // --- Patient Schema ---
 
 export const patientSchema = z.object({
+  facilityId: requiredString("Facility is required"),
+
   title: requiredDropdown("Title is required"),
 
   firstName: requiredName("First name is required"),
@@ -132,6 +192,9 @@ export const patientSchema = z.object({
     }),
 
   contacts: contactsSchema,
+  addresses: z.array(addressSchema).optional(),
+  emergencyContacts: z.array(emergencyContactSchema).optional(),
+
 
 
 });
