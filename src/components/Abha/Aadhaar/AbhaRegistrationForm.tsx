@@ -12,6 +12,7 @@ export default function AbhaRegistrationForm() {
   const [txnId, setTxnId] = useState("");
   const [abhaData, setAbhaData] = useState<any>(null);
   const navigate = useNavigate();
+const [aadhaar, setAadhaar] = useState(""); // <-- Add this
 
   return (
     <div className="max-w-xl mx-auto p-6 bg-white rounded-2xl shadow-xl space-y-6">
@@ -19,28 +20,34 @@ export default function AbhaRegistrationForm() {
 
       <StepIndicator currentStep={step} />
 
-      {step === 0 && (
-        <StepEnterAadhaar
-          onOtpSent={(txn) => {
-            setTxnId(txn);
-            setStep(1);
-          }}
-        />
-      )}
+  {step === 0 && (
+  <StepEnterAadhaar
+    onOtpSent={(txn) => {
+      setTxnId(txn);
+      setStep(1);
+    }}
+    onAadhaarChange={(aadhaarNumber) => setAadhaar(aadhaarNumber)} // <-- Add this
+    onContinueToOtp={() => setStep(1)} // <-- Add this to support Continue button
+  />
+)}
 
-      {step === 1 && (
-        <StepVerifyOtp
-          txnId={txnId}
-          onOtpVerified={(responseData) => {
-            console.log("ABHA Response:", responseData);
-            const patientData = mapAbhaProfileToPatient(responseData.ABHAProfile);
-            console.log("Mapped Patient Data:", patientData);
-            usePatientFormStore.getState().setQuickFormData(patientData);
-            setAbhaData(responseData);
-            setStep(2);
-          }}
-        />
-      )}
+
+   {step === 1 && (
+  <StepVerifyOtp
+    txnId={txnId}
+    aadhaarNumber={aadhaar} // <-- Required for Resend OTP
+    onOtpVerified={(responseData) => {
+      console.log("ABHA Response:", responseData);
+      const patientData = mapAbhaProfileToPatient(responseData.ABHAProfile);
+      console.log("Mapped Patient Data:", patientData);
+      usePatientFormStore.getState().setQuickFormData(patientData);
+      setAbhaData(responseData);
+      setStep(2);
+    }}
+    onResendOtp={(newTxnId) => setTxnId(newTxnId)} // <-- Add this
+  />
+)}
+
 
       {step === 2 && abhaData && (
         <>
