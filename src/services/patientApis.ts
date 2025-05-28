@@ -6,9 +6,8 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const createPatient = async (payload: OptionalPatientRegistrationPayload) => {
   try {
-    const facilityId="5f7031cd-9c93-BF2b-B5cD-4cb1bD59D8B9"
-    const updatedPayload={...payload,facilityId}
-    const response = await axios.post(`${BASE_URL}/patients`, updatedPayload);
+    console.log("Creating patient with payload:", payload);
+    const response = await axios.post(`${BASE_URL}/patients`, payload);
     return { success: true, data: response.data };
   } catch (error: any) {
     console.error("API Error:", error.response?.data || error.message);
