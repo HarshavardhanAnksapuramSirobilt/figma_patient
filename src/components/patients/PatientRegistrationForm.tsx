@@ -278,7 +278,7 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
             <div className="mb-3 bg-gray-50 rounded-md shadow-sm p-3">
                 <h3 className="text-base font-medium mb-3">Facility Details</h3>
                 <div className="grid grid-cols-1">
-                    <FormField label="Facility">
+                    <FormField label="Facility" required>
                         <FacilitySelector
                             name="facilityId"
                             value={form.facilityId || ""}

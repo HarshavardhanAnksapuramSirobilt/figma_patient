@@ -18,7 +18,7 @@ export const createPatient = async (payload: OptionalPatientRegistrationPayload)
 export const getPatientById = async (id: string) => {
   try {
     const response = await axios.get(`${BASE_URL}/patients`, {
-      params: { id },
+      params: { upId:id },
     });
     return response.data;
   } catch (error: any) {

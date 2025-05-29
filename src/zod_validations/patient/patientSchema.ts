@@ -20,14 +20,14 @@ const requiredDropdown = (msg: string) =>
 const requiredName = (msg: string) =>
   z.union([z.string(), z.literal(null)])
     .transform((val) => val ?? "")
-    .refine((val) => /^[A-Za-z]+$/.test(val), { message: "Only letters allowed" })
+    .refine((val) => /^[A-Za-z\s]+$/.test(val), { message: "Only letters and spaces allowed" })
     .refine((val) => val.length > 0, { message: msg });
 
 const optionalName = () =>
   z.union([z.string(), z.literal(null)])
     .transform((val) => val ?? "")
-    .refine((val) => !val || /^[A-Za-z]+$/.test(val), {
-      message: "Only letters allowed",
+    .refine((val) => !val || /^[A-Za-z\s]+$/.test(val), {
+      message: "Only letters and spaces allowed",
     });
 
 const requiredPhone = () =>
@@ -127,7 +127,8 @@ const addressSchema = z.object({
 
 const emergencyContactSchema = z.object({
   contactName: z.string().nullable().optional(),
-  relationship: z.nativeEnum(RelationType).nullable().optional(),
+  // relationship: z.nativeEnum(RelationType).nullable().optional(),
+  relationship: z.any().optional(),
   phoneNumber: z.string().nullable().optional(),
 }).superRefine((data, ctx) => {
   const hasAnyValue =

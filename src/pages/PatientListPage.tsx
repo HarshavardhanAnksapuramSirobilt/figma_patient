@@ -88,6 +88,7 @@ const PatientListPage = () => {
     try {
       const result = await getPatientById(id);
       if (Array.isArray(result) && result.length > 0) {
+        console.log("Seletced Patient details:", result[0]);
         setSelectedPatient(result[0]);
         setShowViewModal(true);
       } else {
