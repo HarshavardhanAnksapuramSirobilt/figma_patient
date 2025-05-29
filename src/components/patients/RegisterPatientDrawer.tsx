@@ -17,6 +17,8 @@ import {
 import { createPatient } from "../../services/patientApis";
 import { showError, showSuccess } from "../../utils/toastUtils";
 import { usePatientFormStore } from "../../store/patientFormStore";
+import FacilitySelector from "../../commonfields/FacilitySelector";
+
 
 
 type Props = {
@@ -29,7 +31,7 @@ export const RegisterPatientDrawer: React.FC<Props> = ({ onClose, onSuccess }) =
 
   const onBasicChange = handleChange(setForm);
   const onContactChange = handleArrayChange(setForm, "contacts", 0);
-  const onEmergencyChange = handleArrayChange(setForm, "emergencyContacts", 0);  
+  const onEmergencyChange = handleArrayChange(setForm, "emergencyContacts", 0);
   const { setQuickFormData } = usePatientFormStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -41,8 +43,8 @@ export const RegisterPatientDrawer: React.FC<Props> = ({ onClose, onSuccess }) =
       showSuccess("Quick Registration Successful", fullName);
       window.dispatchEvent(new Event("patient:registered"));
 
-  if (onSuccess) onSuccess();
-        onClose();
+      if (onSuccess) onSuccess();
+      onClose();
     } else {
       showError("Error Creating Patient", fullName);
       console.error("Error creating patient:", error);
@@ -156,11 +158,20 @@ export const RegisterPatientDrawer: React.FC<Props> = ({ onClose, onSuccess }) =
           />
         </FormField>
 
+        <FormField label="Facility" required>
+          <FacilitySelector
+            name="facilityId"
+            value={form.facilityId || ""}
+            onChange={onBasicChange}
+          />
+        </FormField>
+
+
         <div className="col-span-2 mt-2">
           <Link
             to="/patients"
             className="text-sm text-blue-600 hover:underline"
-            onClick={()=>{setQuickFormData(form);onClose()}}
+            onClick={() => { setQuickFormData(form); onClose() }}
           >
             + Add more details
           </Link>

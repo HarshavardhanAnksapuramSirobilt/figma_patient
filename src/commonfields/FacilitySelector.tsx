@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { Input } from "./Input";
+import { fetchFacilities, fetchFacilityLabel } from "../services/facilityApi";
 
 interface Facility {
   hospitalId: string;
@@ -26,14 +26,11 @@ const FacilitySelector: React.FC<Props> = ({
   const [showDropdown, setShowDropdown] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const fetchFacilities = async (name: string) => {
+  const handleFetchFacilities = async (name: string) => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ name, page: "0", size: "10" });
-      const response = await axios.get(
-        `http://localhost:8080/facilities/suggest?${params}`
-      );
-      setFacilities(response.data.results || []);
+      const data = await fetchFacilities(name);
+      setFacilities(data);
       setShowDropdown(true);
     } catch (err) {
       console.error("Facility fetch error:", err);
@@ -44,9 +41,10 @@ const FacilitySelector: React.FC<Props> = ({
     }
   };
 
+
   useEffect(() => {
     if (search.length >= 1) {
-      const timer = setTimeout(() => fetchFacilities(search), 300);
+      const timer = setTimeout(() => handleFetchFacilities(search), 300);
       return () => clearTimeout(timer);
     } else {
       setFacilities([]);
@@ -62,14 +60,8 @@ const FacilitySelector: React.FC<Props> = ({
 
     const fetchLabel = async () => {
       try {
-        const params = new URLSearchParams({ name: "", page: "0", size: "50" });
-        const res = await axios.get(
-          `http://localhost:8080/facilities/suggest?${params}`
-        );
-        const found = res.data.results.find(
-          (f: Facility) => f.hospitalId === value
-        );
-        if (found) setSearch(found.facilityName);
+        const label = await fetchFacilityLabel(value);
+        setSearch(label);
       } catch (err) {
         console.error("Label fetch error:", err);
       }
