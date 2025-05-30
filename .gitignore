@@ -24,3 +24,7 @@ dist-ssr
 *.sw?
 
 .env.*
+terminal
+package-lock.json
+package-lock.json
+package-lock.json
