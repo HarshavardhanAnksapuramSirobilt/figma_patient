@@ -9,16 +9,63 @@ import { FaEdit, FaTrashAlt, FaEye, FaSearch } from "react-icons/fa";
 import PatientViewModal from "../components/patients/PatientViewModal";
 import { showError, showSuccess } from "../utils/toastUtils";
 import ConfirmDialog from "../utils/ConfirmDialog";
-
-const debounce = (func: (...args: any[]) => void, delay: number) => {
-  let timeoutId: ReturnType<typeof setTimeout>;
-  return (...args: any[]) => {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => func(...args), delay);
-  };
-};
+import ManualRegistrationModal from "../components/patients/ManualRegistrationModal";
+import ABHAVerificationSuccess from "../components/patients/ABHAVerificationSuccess";
+import { usePatientFormStore } from "../store/patientFormStore";
+import { mapAbhaProfileToPatient } from "../utils/mapAbhaToPatient";
 
 const PatientListPage = () => {
+  const [showManualRegistration, setShowManualRegistration] = useState(false);
+  const [verifiedAbhaData, setVerifiedAbhaData] = useState(null);
+  const navigate = useNavigate();
+  const { setQuickFormData } = usePatientFormStore();
+
+  // Check if we should show the registration modal on component mount
+  useEffect(() => {
+    const shouldShowModal = sessionStorage.getItem('showRegistrationModal') === 'true';
+    if (shouldShowModal) {
+      setShowManualRegistration(true);
+      // Clear the flag
+      sessionStorage.removeItem('showRegistrationModal');
+    }
+  }, []);
+
+  const handleABHAVerified = (abhaData) => {
+    setVerifiedAbhaData(abhaData);
+  };
+
+  const handleABHACreated = (abhaData) => {
+    setVerifiedAbhaData(abhaData);
+  };
+
+  const handleProceedToRegistration = (abhaData) => {
+    // Map ABHA data to patient form data
+    const patientData = mapAbhaProfileToPatient(abhaData);
+    
+    // Set the data in the store
+    setQuickFormData(patientData);
+    
+    // Close modals
+    setVerifiedAbhaData(null);
+    setShowManualRegistration(false);
+    
+    // Navigate to patient registration form
+    navigate("/patients");
+  };
+
+  const handleRegisterWithoutABHA = () => {
+    setShowManualRegistration(false);
+    navigate("/patients");
+  };
+
+  const debounce = (func: (...args: any[]) => void, delay: number) => {
+    let timeoutId: ReturnType<typeof setTimeout>;
+    return (...args: any[]) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => func(...args), delay);
+    };
+  };
+
   const [patients, setPatients] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(0);
@@ -27,21 +74,28 @@ const PatientListPage = () => {
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [fullName, setFullName] = useState("");
 
-  const navigate = useNavigate();
-
   const fetchPatients = async (query: string, currentPage: number) => {
-    const result = await getPatientsPaginated({
-      query,
-      page: currentPage,
-      size: pageSize,
-    });
-    setPatients(result.patients || []);
-    setTotalCount(result.totalCount || 0);
+    try {
+      setIsLoading(true);
+      const result = await getPatientsPaginated({
+        query,
+        page: currentPage,
+        size: pageSize,
+      });
+      setPatients(result.patients || []);
+      setTotalCount(result.totalCount || 0);
+    } catch (error) {
+      console.error("Error fetching patients:", error);
+      showError("Failed to load patients", "Please try again later");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const debouncedSearch = useRef(
@@ -72,31 +126,35 @@ const PatientListPage = () => {
   const confirmDelete = async () => {
     if (!pendingDeleteId) return;
 
-    const success = await deletePatientById(pendingDeleteId);
-    if (success) {
-      fetchPatients(searchQuery, page);
-      showSuccess("Patient Deleted Successfully", fullName);
-    } else {
-      showError("Failed To Delete Patient", fullName);
+    try {
+      const success = await deletePatientById(pendingDeleteId);
+      if (success) {
+        fetchPatients(searchQuery, page);
+        showSuccess("Patient Deleted Successfully", fullName);
+      } else {
+        showError("Failed To Delete Patient", fullName);
+      }
+    } catch (error) {
+      console.error("Error deleting patient:", error);
+      showError("Failed To Delete Patient", "An unexpected error occurred");
+    } finally {
+      setIsConfirmOpen(false);
+      setPendingDeleteId(null);
     }
-
-    setIsConfirmOpen(false);
-    setPendingDeleteId(null);
   };
 
   const handleView = async (id: string) => {
     try {
       const result = await getPatientById(id);
       if (Array.isArray(result) && result.length > 0) {
-        console.log("Seletced Patient details:", result[0]);
         setSelectedPatient(result[0]);
         setShowViewModal(true);
       } else {
-        alert("Patient not found.");
+        showError("Patient Not Found", "The requested patient could not be found");
       }
     } catch (error) {
       console.error("Error fetching patient details:", error);
-      alert("Error fetching patient details.");
+      showError("Error", "Failed to fetch patient details");
     }
   };
 
@@ -111,7 +169,7 @@ const PatientListPage = () => {
   }, [refreshTrigger, page]);
 
   const highlightText = (text: string, query: string) => {
-    if (!query) return text;
+    if (!query || !text) return text || "N/A";
     const regex = new RegExp(`(${query})`, "gi");
     return text.split(regex).map((part, index) =>
       part.toLowerCase() === query.toLowerCase() ? (
@@ -126,13 +184,16 @@ const PatientListPage = () => {
 
   return (
     <div className="flex flex-col gap-1 w-full p-3">
-      <div className="flex justify-end">
-        <button
-          className="btn btn-sm bg-primary text-white hover:bg-primary/90 shadow-md px-4 py-1.5 rounded-md"
-          onClick={() => navigate("/patients")}
-        >
-          + Register Patient
-        </button>
+      <div className="flex justify-between items-center">
+        <h1 className="text-xl font-bold text-gray-800">Patient Management</h1>
+        <div className="flex gap-2">
+          <button
+            className="btn btn-sm bg-primary text-white hover:bg-primary/90 shadow-md px-4 py-1.5 rounded-md"
+            onClick={() => setShowManualRegistration(true)}
+          >
+            + Register Patient
+          </button>
+        </div>
       </div>
 
       <div className="bg-white p-4 border border-gray-200 rounded-md shadow-sm">
@@ -144,7 +205,7 @@ const PatientListPage = () => {
             type="text"
             value={searchQuery}
             onChange={handleSearchInputChange}
-            placeholder="Search by firstname, lastname, email,phone number, id"
+            placeholder="Search by name, email, phone number, or identifier"
             className="pl-8 pr-2 py-2 border border-gray-300 rounded text-xs w-full focus:outline-none focus:ring-1 focus:ring-primary"
           />
         </div>
@@ -165,7 +226,16 @@ const PatientListPage = () => {
             </tr>
           </thead>
           <tbody>
-            {patients.length === 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan={7} className="text-center py-4">
+                  <div className="flex justify-center items-center">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                    <span className="ml-2 text-gray-500">Loading patients...</span>
+                  </div>
+                </td>
+              </tr>
+            ) : patients.length === 0 ? (
               <tr>
                 <td colSpan={7} className="text-center py-4 text-gray-500">
                   No patients found.
@@ -183,13 +253,25 @@ const PatientListPage = () => {
                   <td>{p.age ?? "N/A"}</td>
                   <td>{p.gender ?? "N/A"}</td>
                   <td className="text-right space-x-2">
-                    <button className="btn btn-sm btn-outline btn-circle" onClick={() => handleView(p.patientId)} title="View">
+                    <button 
+                      className="btn btn-sm btn-outline btn-circle" 
+                      onClick={() => handleView(p.patientId)} 
+                      title="View"
+                    >
                       <FaEye className="text-green-600" />
                     </button>
-                    <button className="btn btn-sm btn-outline btn-circle" onClick={() => navigate(`/patients/${p.patientId}`)} title="Edit">
+                    <button 
+                      className="btn btn-sm btn-outline btn-circle" 
+                      onClick={() => navigate(`/patients/${p.patientId}`)} 
+                      title="Edit"
+                    >
                       <FaEdit className="text-blue-600" />
                     </button>
-                    <button className="btn btn-sm btn-outline btn-error btn-circle" onClick={() => handleDeleteClick(p.patientId)} title="Delete">
+                    <button 
+                      className="btn btn-sm btn-outline btn-error btn-circle" 
+                      onClick={() => handleDeleteClick(p.patientId)} 
+                      title="Delete"
+                    >
                       <FaTrashAlt />
                     </button>
                   </td>
@@ -201,23 +283,25 @@ const PatientListPage = () => {
       </div>
 
       {/* Pagination Controls */}
-      <div className="flex justify-center mt-4 space-x-2">
-        <button
-          className="btn btn-xs"
-          disabled={page === 0}
-          onClick={() => setPage((p) => Math.max(0, p - 1))}
-        >
-          Previous
-        </button>
-        <span className="text-sm self-center">Page {page + 1} of {totalPages}</span>
-        <button
-          className="btn btn-xs"
-          disabled={page + 1 >= totalPages}
-          onClick={() => setPage((p) => p + 1)}
-        >
-          Next
-        </button>
-      </div>
+      {totalPages > 0 && (
+        <div className="flex justify-center mt-4 space-x-2">
+          <button
+            className="btn btn-xs"
+            disabled={page === 0 || isLoading}
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+          >
+            Previous
+          </button>
+          <span className="text-sm self-center">Page {page + 1} of {totalPages}</span>
+          <button
+            className="btn btn-xs"
+            disabled={page + 1 >= totalPages || isLoading}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            Next
+          </button>
+        </div>
+      )}
 
       {showViewModal && selectedPatient && (
         <PatientViewModal patient={selectedPatient} onClose={() => setShowViewModal(false)} />
@@ -229,6 +313,25 @@ const PatientListPage = () => {
         onConfirm={confirmDelete}
         onCancel={() => setIsConfirmOpen(false)}
       />
+
+      {/* Manual Registration Modal */}
+      {showManualRegistration && (
+        <ManualRegistrationModal
+          onClose={() => setShowManualRegistration(false)}
+          onABHAVerified={handleABHAVerified}
+          onABHACreated={handleABHACreated}
+          onRegisterWithoutABHA={handleRegisterWithoutABHA}
+        />
+      )}
+
+      {/* ABHA Verification Success Modal */}
+      {verifiedAbhaData && (
+        <ABHAVerificationSuccess
+          abhaData={verifiedAbhaData}
+          onClose={() => setVerifiedAbhaData(null)}
+          onProceed={handleProceedToRegistration}
+        />
+      )}
     </div>
   );
 };

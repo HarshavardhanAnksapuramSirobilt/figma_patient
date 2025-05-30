@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Home,
   Users,
@@ -18,19 +18,28 @@ interface SidebarProps {
 
 export const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
+  const [showRegistrationModal, setShowRegistrationModal] = useState(false);
+
+  const handleManualRegistrationClick = (e) => {
+    e.preventDefault();
+    // Set a flag in sessionStorage to show the modal
+    sessionStorage.setItem('showRegistrationModal', 'true');
+    navigate('/list');
+  };
 
   const navItems = [
     { to: "/", label: "Dashboard", icon: <Home /> },
-    {
-      label: "New Patient Registration",
-      icon: <UserPlus />,
-      children: [
-        { to: "/abha-aadhaar", label: "ABHA with Aadhaar" },
-        { to: "/abha-drivinglicense", label: "ABHA with Driving License" },
-        { to: "/patients", label: "Manual Registration" },
-      ],
-    },
+    // {
+    //   label: "New Patient Registration",
+    //   icon: <UserPlus />,
+    //   children: [
+    //     { to: "/abha-aadhaar", label: "ABHA with Aadhaar" },
+    //     { to: "/abha-drivinglicense", label: "ABHA with Driving License" },
+    //     { to: "/patients", label: "Manual Registration" },
+    //   ],
+    // },
     { to: "/list", label: "Patients", icon: <Users /> },
     { to: "/appointments", label: "Appointments", icon: <Calendar /> },
     { to: "/doctors", label: "Doctors", icon: <Stethoscope /> },
@@ -47,7 +56,7 @@ export const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
         <X className="mt-10 w-5 h-5 cursor-pointer" onClick={() => setIsOpen(false)} />
       </div>
 
-      <ul className="menu space-y-1 p-2 text-base-content">
+      <ul className="menu w-full p-2 text-base-content">
         {navItems.map((item) => {
           const isActive = location.pathname === item.to;
           const hasChildren = !!item.children;
@@ -101,10 +110,12 @@ export const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
               ) : (
                 <Link
                   to={item.to}
-                  className="flex items-center gap-3 px-2 py-2 rounded hover:bg-base-300"
+                  className="flex items-center w-full gap-3 px-2 py-2 rounded hover:bg-base-300"
                 >
-                  {item.icon}
-                  <span className="whitespace-nowrap opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <div className="flex-shrink-0">
+                    {item.icon}
+                  </div>
+                  <span className="whitespace-nowrap opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex-grow">
                     {item.label}
                   </span>
                 </Link>
