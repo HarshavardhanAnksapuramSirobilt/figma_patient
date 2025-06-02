@@ -1,9 +1,9 @@
 import axios from "axios";
-import type{ OptionalPatientRegistrationPayload } from '../types/patient';
+import type { OptionalPatientRegistrationPayload } from '../types/patient';
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const BASE_URL = "https://megha-dev.sirobilt.com/api/";
 
-
+// Create a new patient
 export const createPatient = async (payload: OptionalPatientRegistrationPayload) => {
   try {
     console.log("Creating patient with payload:", payload);
@@ -15,10 +15,11 @@ export const createPatient = async (payload: OptionalPatientRegistrationPayload)
   }
 };
 
+// Get patient by ID (upId)
 export const getPatientById = async (id: string) => {
   try {
     const response = await axios.get(`${BASE_URL}/patients`, {
-      params: { upId:id },
+      params: { upId: id },
     });
     return response.data;
   } catch (error: any) {
@@ -27,6 +28,7 @@ export const getPatientById = async (id: string) => {
   }
 };
 
+// Update an existing patient
 export const updatePatient = async (id: string, payload: OptionalPatientRegistrationPayload) => {
   try {
     const response = await axios.put(`${BASE_URL}/patients/${id}`, payload);
@@ -37,26 +39,28 @@ export const updatePatient = async (id: string, payload: OptionalPatientRegistra
   }
 };
 
+// Get all patients
 export const getAllPatients = async () => {
   try {
-    const res = await axios.get(`${BASE_URL}/api/patients`);
-    return res.data;
-  } catch (err: any) {
-    console.error("Failed to fetch patients:", err);
+    const response = await axios.get(`${BASE_URL}/patients`);
+    return response.data;
+  } catch (error: any) {
+    console.error("Failed to fetch patients:", error);
     return [];
   }
 };
 
-export const deletePatient = async (id: string) => {
+// Delete a patient by ID
+export const deletePatientById = async (id: string) => {
   try {
-    await axios.delete(`${BASE_URL}/${id}`);
+    await axios.delete(`${BASE_URL}/patients/${id}`);
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.response?.data || error.message };
   }
 };
 
-
+// Search patients with filters
 export const searchPatients = async (filters: Record<string, string>) => {
   const cleanedFilters: Record<string, string> = {};
 
@@ -73,23 +77,13 @@ export const searchPatients = async (filters: Record<string, string>) => {
     });
 
     return response.data;
-  } catch (err) {
-    console.error("Search patients failed:", err);
+  } catch (error: any) {
+    console.error("Search patients failed:", error);
     return [];
   }
 };
 
-
-export const deletePatientById = async (id: string) => {
-  try {
-    await axios.delete(`${BASE_URL}/patients/${id}`);
-    return true;
-  } catch (err) {
-    console.error("Delete failed:", err);
-    return false;
-  }
-};
-
+// Get patients with pagination and search
 export const getPatientsPaginated = async ({
   page,
   size,
@@ -114,11 +108,36 @@ export const getPatientsPaginated = async ({
   }
 };
 
+// Get patient by ABHA number
+export const getPatientByAbhaNumber = async (abhaNumber: string) => {
+  try {
+    const response = await axios.get(`${BASE_URL}/patients/abha/${abhaNumber}`);
+    return { success: true, data: response.data };
+  } catch (error: any) {
+    console.error("ABHA Fetch Error:", error);
+    return { success: false, error: error.response?.data || error.message };
+  }
+};
 
+// Get patient by mobile number
+export const getPatientByMobile = async (mobileNumber: string) => {
+  try {
+    const response = await axios.get(`${BASE_URL}/patients/mobile/${mobileNumber}`);
+    return { success: true, data: response.data };
+  } catch (error: any) {
+    console.error("Mobile Fetch Error:", error);
+    return { success: false, error: error.response?.data || error.message };
+  }
+};
 
-
-
-
-
-
+// // Validate patient data before submission
+// export const validatePatient = async (payload: OptionalPatientRegistrationPayload) => {
+//   try {
+//     const response = await axios.post(`${BASE_URL}/patients/validate`, payload);
+//     return { success: true, data: response.data };
+//   } catch (error: any) {
+//     console.error("Validation Error:", error.response?.data || error.message);
+//     return { success: false, error: error.response?.data || error.message };
+//   }
+// };
 

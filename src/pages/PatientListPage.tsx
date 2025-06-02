@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   deletePatientById,
   getPatientById,
-  getPatientsPaginated, 
+  getPatientsPaginated,
 } from "../services/patientApis";
 import { FaEdit, FaTrashAlt, FaEye, FaSearch } from "react-icons/fa";
 import PatientViewModal from "../components/patients/PatientViewModal";
@@ -17,8 +17,22 @@ import { mapAbhaProfileToPatient } from "../utils/mapAbhaToPatient";
 const PatientListPage = () => {
   const [showManualRegistration, setShowManualRegistration] = useState(false);
   const [verifiedAbhaData, setVerifiedAbhaData] = useState(null);
+  const [patients, setPatients] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [patientToDelete, setPatientToDelete] = useState(null);
+  const [fullName, setFullName] = useState("");
+  const [page, setPage] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const pageSize = 10;
+  
   const navigate = useNavigate();
-  const { setQuickFormData } = usePatientFormStore();
+
+    const { setQuickFormData } = usePatientFormStore();
 
   // Check if we should show the registration modal on component mount
   useEffect(() => {
@@ -58,29 +72,15 @@ const PatientListPage = () => {
     navigate("/patients");
   };
 
-  const debounce = (func: (...args: any[]) => void, delay: number) => {
-    let timeoutId: ReturnType<typeof setTimeout>;
-    return (...args: any[]) => {
+  const debounce = (func, delay) => {
+    let timeoutId;
+    return (...args) => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => func(...args), delay);
     };
   };
 
-  const [patients, setPatients] = useState([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [page, setPage] = useState(0);
-  const [pageSize] = useState(10);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedPatient, setSelectedPatient] = useState<any>(null);
-  const [showViewModal, setShowViewModal] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const [fullName, setFullName] = useState("");
-
-  const fetchPatients = async (query: string, currentPage: number) => {
+  const fetchPatients = async (query, currentPage) => {
     try {
       setIsLoading(true);
       const result = await getPatientsPaginated({
@@ -88,6 +88,7 @@ const PatientListPage = () => {
         page: currentPage,
         size: pageSize,
       });
+      
       setPatients(result.patients || []);
       setTotalCount(result.totalCount || 0);
     } catch (error) {
@@ -99,55 +100,57 @@ const PatientListPage = () => {
   };
 
   const debouncedSearch = useRef(
-    debounce((query: string) => {
+    debounce((query) => {
       setPage(0);
       fetchPatients(query, 0);
     }, 400)
   ).current;
 
-  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearchInputChange = (e) => {
     const query = e.target.value;
     setSearchQuery(query);
     debouncedSearch(query);
   };
 
-  const handleDeleteClick = (id: string) => {
-    const fetchPatient = patients.find((x) => x.patientId === id);
-    if (!fetchPatient) return;
-
-    const name = `${fetchPatient.firstName} ${
-      fetchPatient.middleName ? fetchPatient.middleName + " " : ""
-    }${fetchPatient.lastName}`;
-    setFullName(name);
-    setPendingDeleteId(id);
-    setIsConfirmOpen(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!pendingDeleteId) return;
-
-    try {
-      const success = await deletePatientById(pendingDeleteId);
-      if (success) {
-        fetchPatients(searchQuery, page);
-        showSuccess("Patient Deleted Successfully", fullName);
-      } else {
-        showError("Failed To Delete Patient", fullName);
-      }
-    } catch (error) {
-      console.error("Error deleting patient:", error);
-      showError("Failed To Delete Patient", "An unexpected error occurred");
-    } finally {
-      setIsConfirmOpen(false);
-      setPendingDeleteId(null);
+  const handleDeleteClick = (id) => {
+    const patient = patients.find(p => p.patientId === id);
+    if (patient) {
+      const name = `${patient.firstName || ''} ${patient.middleName || ''} ${patient.lastName || ''}`.trim();
+      setFullName(name);
+      setPatientToDelete(patient);
+      setIsConfirmOpen(true);
     }
   };
 
-  const handleView = async (id: string) => {
+  const confirmDelete = async () => {
+    if (!patientToDelete) return;
+    
+    try {
+      const result = await deletePatientById(patientToDelete.upId || patientToDelete.patientId);
+      if (result.success) {
+        showSuccess("Patient Deleted", "Patient has been successfully deleted");
+        setRefreshTrigger(prev => prev + 1);
+      } else {
+        showError("Delete Failed", result.error?.message || "Failed to delete patient");
+      }
+    } catch (error) {
+      console.error("Error deleting patient:", error);
+      showError("Delete Failed", "An error occurred while deleting the patient");
+    } finally {
+      setIsConfirmOpen(false);
+      setPatientToDelete(null);
+    }
+  };
+
+  const handleView = async (id) => {
     try {
       const result = await getPatientById(id);
       if (Array.isArray(result) && result.length > 0) {
         setSelectedPatient(result[0]);
+        setShowViewModal(true);
+      } else if (result && !Array.isArray(result)) {
+        // Handle case where API returns a single object
+        setSelectedPatient(result);
         setShowViewModal(true);
       } else {
         showError("Patient Not Found", "The requested patient could not be found");
@@ -159,7 +162,7 @@ const PatientListPage = () => {
   };
 
   useEffect(() => {
-    const handleRefreshEvent = () => setRefreshTrigger((prev) => prev + 1);
+    const handleRefreshEvent = () => setRefreshTrigger(prev => prev + 1);
     window.addEventListener("patient:registered", handleRefreshEvent);
     return () => window.removeEventListener("patient:registered", handleRefreshEvent);
   }, []);
@@ -168,7 +171,7 @@ const PatientListPage = () => {
     fetchPatients(searchQuery, page);
   }, [refreshTrigger, page]);
 
-  const highlightText = (text: string, query: string) => {
+  const highlightText = (text, query) => {
     if (!query || !text) return text || "N/A";
     const regex = new RegExp(`(${query})`, "gi");
     return text.split(regex).map((part, index) =>
@@ -242,7 +245,7 @@ const PatientListPage = () => {
                 </td>
               </tr>
             ) : (
-              patients.map((p: any) => (
+              patients.map((p) => (
                 <tr key={p.patientId} className="hover:bg-gray-50">
                   <td className="font-medium text-gray-800">
                     {highlightText(`${p.firstName} ${p.middleName || ""} ${p.lastName}`, searchQuery)}
@@ -314,7 +317,7 @@ const PatientListPage = () => {
         onCancel={() => setIsConfirmOpen(false)}
       />
 
-      {/* Manual Registration Modal */}
+       {/* Manual Registration Modal */}
       {showManualRegistration && (
         <ManualRegistrationModal
           onClose={() => setShowManualRegistration(false)}
@@ -332,6 +335,7 @@ const PatientListPage = () => {
           onProceed={handleProceedToRegistration}
         />
       )}
+
     </div>
   );
 };

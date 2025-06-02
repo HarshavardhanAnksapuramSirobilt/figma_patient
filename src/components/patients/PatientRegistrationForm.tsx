@@ -49,7 +49,6 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
     const [presentSameAsPermanent, setPresentSameAsPermanent] = React.useState(false);
 
 
-
     const onChange = handleChange(setForm);
     const onContactChange = (index: number) => handleArrayChange(setForm, "contacts", index);
     const onAddressChange = (index: number) => handleArrayChange(setForm, "addresses", index);
@@ -64,28 +63,30 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
         e.preventDefault();
 
         try {
-            patientSchema.parse(form); // Zod validation
-            setFormErrors({}); // Clear previous errors
+            // First validate the form data with Zod
+            patientSchema.parse(form);
+            setFormErrors({});
+            
             const fullName = `${form.firstName} ${form.middleName || ""} ${form.lastName}`.trim();
-
+            
             if (patientId) {
+                // Update existing patient
                 const { success, error } = await updatePatient(patientId, form);
                 if (success) {
-                    showSuccess("Patient updated successfully", `Patient Name:${fullName}`);
-                    navigate("/list")
+                    showSuccess("Patient updated successfully", `Patient Name: ${fullName}`);
                 } else {
-                    console.log(error)
-                    showError("Update Failed", `Error updating patient`);
+                    console.error(error);
+                    showError("Update Failed", error?.message || "Error updating patient");
                 }
             } else {
+                // Create new patient
                 const { success, error, data } = await createPatient(form);
                 if (success) {
                     console.log("Created Patient:", data);
-                    showSuccess("Patient Created Successfully", `Patient Name:${fullName}`);
-                    navigate("/list")
+                    showSuccess("Patient Created Successfully", `Patient Name: ${fullName}`);
                 } else {
-                    console.log(error)
-                    showError("Creating Patient Failed", `Error in creating patient`);
+                    console.error(error);
+                    showError("Creating Patient Failed", error?.message || "Error in creating patient");
                 }
             }
         } catch (error: any) {
@@ -97,9 +98,9 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
                 });
                 setFormErrors(fieldErrors);
                 showError("Fix errors in form", "Please correct the highlighted errors before submitting.");
-
             } else {
                 console.error("Unexpected error:", error);
+                showError("Error", error.message || "An unexpected error occurred");
             }
         }
     };
@@ -129,12 +130,17 @@ export const PatientRegistrationForm: React.FC<Props> = ({ patientId }) => {
                 setLoading(true);
                 const result = await getPatientById(patientId);
                 if (Array.isArray(result) && result.length > 0) {
-                    setForm(result[0]); // Take first object in array
+                    setForm(result[0]);
+                } else if (result && !Array.isArray(result)) {
+                    // Handle case where API returns a single object
+                    setForm(result);
                 } else {
                     console.warn("No patient found for ID:", patientId);
+                    showError("Patient Not Found", "The requested patient could not be found");
                 }
             } catch (error) {
                 console.error("Error loading patient:", error);
+                showError("Error", "Failed to load patient data");
             } finally {
                 setLoading(false);
             }
