@@ -1,7 +1,9 @@
 import axios from "axios";
 import type { OptionalPatientRegistrationPayload } from '../types/patient';
+import { mockPatients } from '../mockData/appointmentMockData';
 
 const BASE_URL = "https://megha-dev.sirobilt.com/api/";
+const USE_MOCK_DATA = true; // Set to false to use real API
 
 // Create a new patient
 export const createPatient = async (payload: OptionalPatientRegistrationPayload) => {
@@ -41,12 +43,23 @@ export const updatePatient = async (id: string, payload: OptionalPatientRegistra
 
 // Get all patients
 export const getAllPatients = async () => {
-  try {
-    const response = await axios.get(`${BASE_URL}/patients`);
-    return response.data;
-  } catch (error: any) {
-    console.error("Failed to fetch patients:", error);
-    return [];
+  if (USE_MOCK_DATA) {
+    try {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 200));
+      return mockPatients;
+    } catch (error: any) {
+      console.error("Failed to fetch patients:", error);
+      return [];
+    }
+  } else {
+    try {
+      const response = await axios.get(`${BASE_URL}/patients`);
+      return response.data;
+    } catch (error: any) {
+      console.error("Failed to fetch patients:", error);
+      return [];
+    }
   }
 };
 

@@ -6,13 +6,18 @@ import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
  * Show a success toast for patient registration
  * @param fullName - Full name of the registered patient
  */
-export const showSuccess = (message: string, fullName: string): void => {
+export const showSuccess = (message: string, fullName?: string): void => {
     toast.success(
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
             <FaCheckCircle style={{ color: 'green', marginTop: '4px' }} />
             <div>
-                <strong>{message}</strong><br />
-                 <span style={{ fontWeight: 600 }}>{fullName}</span>
+                <strong>{message}</strong>
+                {fullName && (
+                    <>
+                        <br />
+                        <span style={{ fontWeight: 600 }}>{fullName}</span>
+                    </>
+                )}
             </div>
         </div>,
         {
@@ -35,13 +40,18 @@ export const showSuccess = (message: string, fullName: string): void => {
  * @param message - Main error message
  * @param fullName - Full name of the patient that failed to register
  */
-export const showError = (message: string, fullName: string): void => {
+export const showError = (message: string, fullName?: string): void => {
     toast.error(
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
             <FaTimesCircle style={{ color: 'red', marginTop: '4px' }} />
             <div>
-                <strong>{message}</strong><br />
-                Failed to register patient <span style={{ fontWeight: 600 }}>{fullName}</span>.
+                <strong>{message}</strong>
+                {fullName && (
+                    <>
+                        <br />
+                        Failed to register patient <span style={{ fontWeight: 600 }}>{fullName}</span>.
+                    </>
+                )}
             </div>
         </div>,
         {
